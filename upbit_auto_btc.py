@@ -1,3 +1,4 @@
+# ---------------- library -------------------------
 import pyupbit
 import time
 import pandas as pd
@@ -6,9 +7,8 @@ access = "JW7G0hr9xnBWpejlquZkEW78db0GXX1ROrPgK6ws"
 secret = "tWLOFowynAXsT5UitsM4tPPuL1uIxrMNtYThIDZj"
 upbit = pyupbit.Upbit(access, secret)
 
-# --------------------------------------------------
+# ----------------- functions -----------------------
 
-# upbit.buy_market_order("KRW-BTC", 5000)
 '''
 ohclv: candle data 
 standard_date
@@ -29,20 +29,35 @@ def get_RSI(ohlcv, period, standard_date):
     return float(pd.Series(100 - (100 / (1 + RS)), name="RSI").iloc[standard_date])
 
 
-def get_MA(ohclv, perode, standard_date):
+def get_MA(ohclv, period, standard_date):
+    close = ohclv["close"]
+    ma = close.rolling(period).mean()
+    return float(ma[standard_date])
 
 
-    # ------------------------------------------------------
-day_candle = pyupbit.get_ohlcv("KRW-BTC", interval="minute240")
+# ---------------------- variables --------------------------
+day_candle = pyupbit.get_ohlcv("KRW-BTC", interval="day")
+minute_240_candle = pyupbit.get_ohlcv("KRW-BTC", interval="minute240")
 
-print(get_RSI(day_candle, 14, -1))
-# RSI_today
-# get_RSI(day_candle, 14).iloc[-1]
+rsi_14_today = get_RSI(minute_240_candle, 14, -1)
+rsi_14_yesterday = get_RSI(minute_240_candle, 14, -2)
 
-# ---------------------------------------------------------
-rsi_14 = get_RSI(day_candle, 14)
+ma_5_before_2 = get_MA(day_candle, 5, -3)
+ma_5_before = get_MA(day_candle, 5, -2)
+ma_5_now = get_MA(day_candle, 5, -1)
 
-print("---------------btc bot working-----------------")
+ma_20_before_2 = get_MA(day_candle, 20, -3)
+ma_20_before = get_MA(day_candle, 20, -2)
+ma_20_now = get_MA(day_candle, 20, -1)
 
-if rsi_14 <= 30:
+# ------------------- working part ----------------------------
+print("--------------- BTC BOT WORKING ---------------")
+
+print("--------------- MA CHECK ---------------")
+print(
+    f"ma_5_before_2: {ma_5_before_2}\nma_5_before: {ma_5_before}\nma_5_now: {ma_5_now}")
+print("----------------------------------------")
+
+
+if rsi_14_today <= 30:
     print(upbit.buy_market_order("KRW-BTC", 5000))
