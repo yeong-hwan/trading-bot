@@ -9,9 +9,15 @@ upbit = pyupbit.Upbit(access, secret)
 # --------------------------------------------------
 
 # upbit.buy_market_order("KRW-BTC", 5000)
+'''
+ohclv: candle data 
+standard_date
+    -1: today(now)
+    -2: yesterday
+'''
 
 
-def get_RSI(ohlcv, period):
+def get_RSI(ohlcv, period, standard_date):
     ohlcv["close"] = ohlcv["close"]
     delta = ohlcv["close"].diff()
     up, down = delta.copy(), delta.copy()
@@ -20,15 +26,23 @@ def get_RSI(ohlcv, period):
     _gain = up.ewm(com=(period - 1), min_periods=period).mean()
     _loss = down.abs().ewm(com=(period - 1), min_periods=period).mean()
     RS = _gain / _loss
-    return pd.Series(100 - (100 / (1 + RS)), name="RSI")
+    return float(pd.Series(100 - (100 / (1 + RS)), name="RSI").iloc[standard_date])
 
 
-day_candle = pyupbit.get_ohlcv("KRW-BTC", interval="day")
+def get_MA(ohclv, perode, standard_date):
 
-print(get_RSI(day_candle, 14))
+
+    # ------------------------------------------------------
+day_candle = pyupbit.get_ohlcv("KRW-BTC", interval="minute240")
+
+print(get_RSI(day_candle, 14, -1))
 # RSI_today
 # get_RSI(day_candle, 14).iloc[-1]
-rsi_14 = float(get_RSI(day_candle, 14).iloc[-1])
+
+# ---------------------------------------------------------
+rsi_14 = get_RSI(day_candle, 14)
+
+print("---------------btc bot working-----------------")
 
 if rsi_14 <= 30:
-    upbit.buy_market_order("KRW-BTC", 5000)
+    print(upbit.buy_market_order("KRW-BTC", 5000))
