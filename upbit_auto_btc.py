@@ -13,7 +13,7 @@ upbit = pyupbit.Upbit(access, secret)
 ohclv: candle data 
 standard_date
     -1: today(now)
-    -2: yesterday
+    -2: yesterday / before
 '''
 
 
