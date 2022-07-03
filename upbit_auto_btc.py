@@ -16,6 +16,8 @@ standard_date
     -2: yesterday / before
 '''
 
+# Relative Strength Index
+
 
 def get_RSI(ohlcv, period, standard_date):
     ohlcv["close"] = ohlcv["close"]
@@ -27,6 +29,8 @@ def get_RSI(ohlcv, period, standard_date):
     _loss = down.abs().ewm(com=(period - 1), min_periods=period).mean()
     RS = _gain / _loss
     return float(pd.Series(100 - (100 / (1 + RS)), name="RSI").iloc[standard_date])
+
+# Moving Average
 
 
 def get_MA(ohclv, period, standard_date):
@@ -52,12 +56,9 @@ ma_20_now = get_MA(day_candle, 20, -1)
 
 # ------------------- working part ----------------------------
 print("--------------- BTC BOT WORKING ---------------")
-
 print("--------------- MA CHECK ---------------")
 print(
     f"ma_5_before_2: {ma_5_before_2}\nma_5_before: {ma_5_before}\nma_5_now: {ma_5_now}")
+
+
 print("----------------------------------------")
-
-
-if rsi_14_today <= 30:
-    print(upbit.buy_market_order("KRW-BTC", 5000))
