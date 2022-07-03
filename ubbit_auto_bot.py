@@ -1,5 +1,6 @@
 # ---------------- library -------------------------
 from aem import con
+from numpy import float_power, real
 import pyupbit
 import time
 import pandas as pd
@@ -121,6 +122,45 @@ def is_has_coin(balances, ticker):
     return has_coin
 
 
+def get_has_coin_cnt(balances):
+    coin_cnt = 0
+    for value in balances:
+        avg_buy_price = float(value["avg_buy_price"])
+        if avg_buy_price != 0:
+            coin_cnt += 1
+    return coin_cnt
+
+
+def get_total_money(balances):
+    total = 0.0
+    for value in balances:
+        ticker = value["currency"]
+
+        if ticker == "KRW":
+            total += float(value["balance"])
+        else:
+            total += (float(value["avg_buy_price"]) * float(value["balance"]))
+    return total
+
+
+def get_total_real_money(balances):
+    total = 0.0
+    for value in balances:
+        ticker = value["currency"]
+
+        if ticker == "KRW":
+            total += float(value["balance"])
+        else:
+            avg_buy_price = float(value["avg_buy_price"])
+            if avg_buy_price != 0:
+                real_ticker = value["unit_currency"] + "-" + value["currency"]
+                time.sleep(0.05)
+                now_price = pyupbit.get_current_price(real_ticker)
+                total += (float(value["avg_buy_price"])
+                          * float(value["balance"]))
+    return total
+
+
 # ---------------------- variables --------------------------
 top_coin_list = get_top_coin_list("week", 10)
 danger_coin_list = ["KRW-DOGE"]
@@ -128,8 +168,16 @@ my_coin_list = []
 tickers = pyupbit.get_tickers("KRW")
 balances = upbit.get_balances()
 
+total_money = get_total_money(balances)
+total_real_money = get_total_real_money(balances)
+total_revenue = (total_real_money - total_money) * 100.0 / total_money
+
 # ------------------- working part ----------------------------
 print("--------------- BTC BOT WORKING ---------------")
+
+print("Total Money:", total_money)
+print("Total Real Money:", total_real_money)
+print("Total Revenue:", total_revenue)
 
 for ticker in tickers:
     try:
@@ -156,7 +204,7 @@ for ticker in tickers:
     # 보유하고 있는 코인들
     if is_has_coin(balances, ticker) == True:
         print("has_coin")
-    # 아직 매수하기 전인 코인들
+    # 매수하기 전인 코인들
     else:
         print("not_on_my_hand")
 
