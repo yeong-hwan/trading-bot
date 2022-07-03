@@ -168,17 +168,42 @@ my_coin_list = []
 tickers = pyupbit.get_tickers("KRW")
 balances = upbit.get_balances()
 
+'''
+total_money: 총 원금
+total_real_money: 총 평가금액
+total_revenue: 수익율
+'''
+
 total_money = get_total_money(balances)
 total_real_money = get_total_real_money(balances)
 total_revenue = (total_real_money - total_money) * 100.0 / total_money
 
-# ------------------- working part ----------------------------
+'''
+max_coin_cnt: 매수할 총 코인 개수
+coin_max_money: 코인당 매수 최대금액
+first_rate: 초기 투자 종목별 원금 10 %
+after_rate: 추가 매수 비율 5%
+'''
+
+max_coin_cnt = 5.0
+coin_max_money = total_money / max_coin_cnt
+first_rate = 10.0
+after_rate = 5.0
+first_enter_money = coin_max_money / 100.0 * first_rate
+after_enter_money = coin_max_money / 100.0 * after_rate
+
+# ------------------- status ----------------------------
 print("--------------- BTC BOT WORKING ---------------")
+print("Total Money : ", total_money)
+print("Total Real Money : ", total_real_money)
+print("Total Revenue : ", total_revenue)
+print("------------------------------------------------")
+print("Coin Max Money : ", coin_max_money)
+print("First Enter Money : ", first_enter_money)
+print("After Enter Money : ", after_enter_money)
+print("------------------------------------------------")
 
-print("Total Money:", total_money)
-print("Total Real Money:", total_real_money)
-print("Total Revenue:", total_revenue)
-
+# ------------------- working part ----------------------------
 for ticker in tickers:
     try:
         if check_coin_in_list(top_coin_list, ticker) == False:
