@@ -57,7 +57,7 @@ def get_top_coin_list(interval, top):
             dic_coin_money[ticker] = volume_money
 
             print(ticker, dic_coin_money[ticker])
-            time.sleep(0.02)
+            time.sleep(0.05)
 
         except Exception as e:
             print("exception:", e)
@@ -93,12 +93,12 @@ def get_revenue_rate(balances, Ticker):
     revenue_rate = 0.0
     for value in balances:
         try:
-            realTicker = value['unit_currency'] + "-" + value['currency']
-            if Ticker == realTicker:
-                time.sleep(0.05)
+            real_ticker = value['unit_currency'] + "-" + value['currency']
+            if ticker == real_ticker:
+                time.sleep(0.02)
 
                 # 현재 가격을 가져옵니다.
-                nowPrice = pyupbit.get_current_price(realTicker)
+                nowPrice = pyupbit.get_current_price(real_ticker)
 
                 # 수익율을 구해서 넣어줍니다
                 revenue_rate = (float(
@@ -112,13 +112,13 @@ def get_revenue_rate(balances, Ticker):
 
 
 # Check buy success
-def is_has_coin(balances, Ticker):
-    HasCoin = False
+def is_has_coin(balances, ticker):
+    has_coin = False
     for value in balances:
-        realTicker = value['unit_currency'] + "-" + value['currency']
-        if Ticker == realTicker:
-            HasCoin = True
-    return HasCoin
+        real_ticker = value['unit_currency'] + "-" + value['currency']
+        if ticker == real_ticker:
+            has_coin = True
+    return has_coin
 
 
 # ---------------------- variables --------------------------
@@ -147,20 +147,21 @@ for ticker in tickers:
 
     day_candle_60 = pyupbit.get_ohlcv(ticker, interval="minute60")
     rsi60_min_before = get_RSI(day_candle_60, 14, -2)
-    rsi60_min = get_RSI(day_candle_60, 14, -1)
+    rsi60_min_now = get_RSI(day_candle_60, 14, -1)
 
     revenu_rate = get_revenue_rate(balances, ticker)
-    print(ticker, ", RSI :", rsi60_min_before, " -> ", rsi60_min)
+    print(ticker, ", RSI :", rsi60_min_before, " -> ", rsi60_min_now)
     print("revenu_rate : ", revenu_rate)
 
-    # 보유하고 있는 코인들 즉 매수 상태인 코인들
+    # 보유하고 있는 코인들
     if is_has_coin(balances, ticker) == True:
         print("has_coin")
-    # 아직 매수하기 전인 코인들 즉 매수 대상
+    # 아직 매수하기 전인 코인들
     else:
-        print("No have")
+        print("not_on_my_hand")
 
-    # if rsi60_min <= 30.0 and revenu_rate < -5.0:
+    # if rsi60_min_now <= 30.0 and revenu_rate < -5.0:
+        # 분할 매수
 
 
 print("----------------------------------------")
