@@ -1,4 +1,5 @@
 # ---------------- library -------------------------
+from locale import currency
 from aem import con
 from numpy import float_power, real
 import pyupbit
@@ -75,7 +76,6 @@ def get_top_coin_list(interval, top):
             coin_list.append(coin_data[0])
         else:
             break
-    print("------------------ Returned Top Coin List ---------------")
 
     return coin_list
 
@@ -111,8 +111,23 @@ def get_revenue_rate(balances, Ticker):
 
     return revenue_rate
 
+# Return sum of total buy amounts
+
+
+def get_coin_now_money(balances, ticker):
+    coin_money = 0.0
+    for value in balances:
+        real_ticker = value["unit_currency"] + "-" + value["currency"]
+        if ticker == real_ticker:
+            coin_money = float(value["avg_buy_price"]) * \
+                float(value['balance'])
+            break
+
+    return coin_money
 
 # Check buy success
+
+
 def is_has_coin(balances, ticker):
     has_coin = False
     for value in balances:
@@ -174,9 +189,12 @@ total_real_money: 총 평가금액
 total_revenue: 수익율
 '''
 
-total_money = get_total_money(balances)
+# total_money = get_total_money(balances)
+total_money = 0
 total_real_money = get_total_real_money(balances)
-total_revenue = (total_real_money - total_money) * 100.0 / total_money
+total_revenue = 0
+if total_money != 0:
+    total_revenue = (total_real_money - total_money) * 100.0 / total_money
 
 '''
 max_coin_cnt: 매수할 총 코인 개수
@@ -193,7 +211,8 @@ first_enter_money = coin_max_money / 100.0 * first_rate
 after_enter_money = coin_max_money / 100.0 * after_rate
 
 # ------------------- status ----------------------------
-print("--------------- BTC BOT WORKING ---------------")
+print("--------------- STATUS ---------------")
+print(balances)
 print("Total Money : ", total_money)
 print("Total Real Money : ", total_real_money)
 print("Total Revenue : ", total_revenue)
@@ -213,28 +232,41 @@ for ticker in tickers:
         if check_coin_in_list(my_coin_list, ticker) == False:
             continue
         print(ticker, "is target")
+
+        time.sleep(0.05)
+
+        day_candle_60 = pyupbit.get_ohlcv(ticker, interval="minute60")
+        rsi60_min_before = get_RSI(day_candle_60, 14, -2)
+        rsi60_min_now = get_RSI(day_candle_60, 14, -1)
+
+        time.sleep(0.05)
+
+        revenue_rate = get_revenue_rate(balances, ticker)
+        print(ticker, ", RSI :", rsi60_min_before, " -> ", rsi60_min_now)
+        print("revenu_rate : ", revenue_rate)
+
+        # 보유하고 있는 코인들
+        if is_has_coin(balances, ticker) == True:
+            now_coin_total_money = get_coin_now_money(balances, ticker)
+            total_rate = now_coin_total_money / coin_max_money * 100.0
+
+            if rsi60_min_now <= 30.0:
+                if total_rate <= 50.0:
+                    time.sleep(0.05)
+                    print(upbit.buy_market_order(ticker, after_enter_money))
+                else:
+                    if revenue_rate <= -5.0:
+                        time.sleep(0.05)
+                        print(upbit.buy_market_order(
+                            ticker, after_enter_money))
+        else:
+            print("not_on_my_hand")
+            if rsi60_min_now <= 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
+                time.sleep(0.05)
+                print(upbit.buy_market_order(ticker, first_enter_money))
+
     except Exception as e:
         print(e)
-
-    time.sleep(0.05)
-
-    day_candle_60 = pyupbit.get_ohlcv(ticker, interval="minute60")
-    rsi60_min_before = get_RSI(day_candle_60, 14, -2)
-    rsi60_min_now = get_RSI(day_candle_60, 14, -1)
-
-    revenu_rate = get_revenue_rate(balances, ticker)
-    print(ticker, ", RSI :", rsi60_min_before, " -> ", rsi60_min_now)
-    print("revenu_rate : ", revenu_rate)
-
-    # 보유하고 있는 코인들
-    if is_has_coin(balances, ticker) == True:
-        print("has_coin")
-    # 매수하기 전인 코인들
-    else:
-        print("not_on_my_hand")
-
-    # if rsi60_min_now <= 30.0 and revenu_rate < -5.0:
-        # 분할 매수
 
 
 print("----------------------------------------")
