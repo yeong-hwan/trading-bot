@@ -178,7 +178,7 @@ def get_total_real_money(balances):
 
 # ---------------------- variables --------------------------
 top_coin_list = get_top_coin_list("week", 10)
-danger_coin_list = ["KRW-DOGE"]
+except_coin_list = ["KRW-DOGE"]
 my_coin_list = []
 tickers = pyupbit.get_tickers("KRW")
 balances = upbit.get_balances()
@@ -224,10 +224,11 @@ print("------------------------------------------------")
 
 # ------------------- working part ----------------------------
 for ticker in tickers:
+    # --------------------- coin selection --------------------
     try:
         if check_coin_in_list(top_coin_list, ticker) == False:
             continue
-        if check_coin_in_list(danger_coin_list, ticker) == True:
+        if check_coin_in_list(except_coin_list, ticker) == True:
             continue
         if check_coin_in_list(my_coin_list, ticker) == False:
             continue
@@ -235,6 +236,7 @@ for ticker in tickers:
 
         time.sleep(0.05)
 
+        # -------------------- variables -----------------------
         day_candle_60 = pyupbit.get_ohlcv(ticker, interval="minute60")
         rsi60_min_before = get_RSI(day_candle_60, 14, -2)
         rsi60_min_now = get_RSI(day_candle_60, 14, -1)
@@ -243,14 +245,32 @@ for ticker in tickers:
 
         revenue_rate = get_revenue_rate(balances, ticker)
         print(ticker, ", RSI :", rsi60_min_before, " -> ", rsi60_min_now)
-        print("revenu_rate : ", revenue_rate)
+        print("revenue_rate : ", revenue_rate)
 
-        # 보유하고 있는 코인들
+        # get KRW balance
+        won_balance = float(upbit.get_balance("KRW"))
+
         if is_has_coin(balances, ticker) == True:
             now_coin_total_money = get_coin_now_money(balances, ticker)
+
+            # ----------------- sell logic ---------------------------
+            if rsi60_min_now >= 70 and revenue_rate >= 1.0:
+                volume = upbit.get_balance(ticker)
+                time.sleep(0.05)
+
+                if now_coin_total_money < coin_max_money / 4.0:
+                    print(upbit.sell_market_order(ticker, volume))
+                else:
+                    print(upbit.sell_market_order(ticker, volume / 2.0))
+
+            # stop loss
+            if won_balance < after_enter_money and revenue_rate <= -10.0:
+                print(upbit.sell_market_order(ticker, volume / 2.0))
+
+            # ----------------- buy logic ----------------------------
             total_rate = now_coin_total_money / coin_max_money * 100.0
 
-            if rsi60_min_now <= 30.0:
+            if rsi60_min_before <= 30.0 and rsi60_min_now > 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
                 if total_rate <= 50.0:
                     time.sleep(0.05)
                     print(upbit.buy_market_order(ticker, after_enter_money))
@@ -261,7 +281,9 @@ for ticker in tickers:
                             ticker, after_enter_money))
         else:
             print("not_on_my_hand")
-            if rsi60_min_now <= 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
+            # if rsi60_min_now <= 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
+
+            if rsi60_min_before <= 30.0 and rsi60_min_now > 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
                 time.sleep(0.05)
                 print(upbit.buy_market_order(ticker, first_enter_money))
 
