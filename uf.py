@@ -3,7 +3,7 @@ import time
 import pyupbit
 
 
-# ----------------- functions -----------------------
+# ----------------- upbit functions -----------------------
 
 '''
 ohclv: candle data

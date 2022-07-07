@@ -1,7 +1,7 @@
 # ---------------- library -------------------------
 import pyupbit
 import time
-import upbit_functions
+import uf
 
 
 access = "JW7G0hr9xnBWpejlquZkEW78db0GXX1ROrPgK6ws"
@@ -9,7 +9,7 @@ secret = "tWLOFowynAXsT5UitsM4tPPuL1uIxrMNtYThIDZj"
 upbit = pyupbit.Upbit(access, secret)
 
 # ---------------------- variables --------------------------
-top_coin_list = get_top_coin_list("week", 10)
+top_coin_list = uf.get_top_coin_list("week", 10)
 except_coin_list = ["KRW-DOGE"]
 my_coin_list = []
 tickers = pyupbit.get_tickers("KRW")
@@ -23,7 +23,7 @@ total_revenue: 수익율
 
 # total_money = get_total_money(balances)
 total_money = 0
-total_real_money = get_total_real_money(balances)
+total_real_money = uf.get_total_real_money(balances)
 total_revenue = 0
 if total_money != 0:
     total_revenue = (total_real_money - total_money) * 100.0 / total_money
@@ -58,11 +58,11 @@ print("------------------------------------------------")
 for ticker in tickers:
     # --------------------- coin selection --------------------
     try:
-        if check_coin_in_list(top_coin_list, ticker) == False:
+        if uf.check_coin_in_list(top_coin_list, ticker) == False:
             continue
-        if check_coin_in_list(except_coin_list, ticker) == True:
+        if uf.check_coin_in_list(except_coin_list, ticker) == True:
             continue
-        if check_coin_in_list(my_coin_list, ticker) == False:
+        if uf.check_coin_in_list(my_coin_list, ticker) == False:
             continue
         print(ticker, "is target")
 
@@ -70,20 +70,20 @@ for ticker in tickers:
 
         # -------------------- variables -----------------------
         day_candle_60 = pyupbit.get_ohlcv(ticker, interval="minute60")
-        rsi60_min_before = get_RSI(day_candle_60, 14, -2)
-        rsi60_min_now = get_RSI(day_candle_60, 14, -1)
+        rsi60_min_before = uf.get_RSI(day_candle_60, 14, -2)
+        rsi60_min_now = uf.get_RSI(day_candle_60, 14, -1)
 
         time.sleep(0.05)
 
-        revenue_rate = get_revenue_rate(balances, ticker)
+        revenue_rate = uf.get_revenue_rate(balances, ticker)
         print(ticker, ", RSI :", rsi60_min_before, " -> ", rsi60_min_now)
         print("revenue_rate : ", revenue_rate)
 
         # get KRW balance
         won_balance = float(upbit.get_balance("KRW"))
 
-        if is_has_coin(balances, ticker) == True:
-            now_coin_total_money = get_coin_now_money(balances, ticker)
+        if uf.is_has_coin(balances, ticker) == True:
+            now_coin_total_money = uf.get_coin_now_money(balances, ticker)
 
             # ----------------- sell logic ---------------------------
             if rsi60_min_now >= 70 and revenue_rate >= 1.0:
@@ -102,7 +102,7 @@ for ticker in tickers:
             # ----------------- buy logic ----------------------------
             total_rate = now_coin_total_money / coin_max_money * 100.0
 
-            if rsi60_min_before <= 30.0 and rsi60_min_now > 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
+            if rsi60_min_before <= 30.0 and rsi60_min_now > 30.0 and uf.get_has_coin_cnt(balances) < max_coin_cnt:
                 if total_rate <= 50.0:
                     time.sleep(0.05)
                     print(upbit.buy_market_order(ticker, after_enter_money))
@@ -115,7 +115,7 @@ for ticker in tickers:
             print("not_on_my_hand")
             # if rsi60_min_now <= 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
 
-            if rsi60_min_before <= 30.0 and rsi60_min_now > 30.0 and get_has_coin_cnt(balances) < max_coin_cnt:
+            if rsi60_min_before <= 30.0 and rsi60_min_now > 30.0 and uf.get_has_coin_cnt(balances) < max_coin_cnt:
                 time.sleep(0.05)
                 print(upbit.buy_market_order(ticker, first_enter_money))
 
