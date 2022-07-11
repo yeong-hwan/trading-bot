@@ -80,10 +80,10 @@ def set_stop_loss(binance, ticker, cut_rate):
 
         danger_rate = ((100.0 / leverage) * cut_rate) * 1.0
 
-        # stop loss price - long
+        # stop loss price for long
         stop_price = entry_price * (1.0 - danger_rate * 0.01)
 
-        # stop loss price - short
+        # stop loss price for short
         if amt < 0:
             stop_price = entry_price * (1.0 + danger_rate * 0.01)
 
@@ -107,7 +107,7 @@ def get_amount(usdt, coin_price, rate):
     target = usdt * rate
 
     amount = target / coin_price
-
+    # at least 0.001 coin for trading
     if amount < 0.001:
         amount = 0.001
 
@@ -115,8 +115,8 @@ def get_amount(usdt, coin_price, rate):
     return amount
 
 
-def get_coin_current_price(binance, Ticker):
-    coin_info = binance.fetch_ticker(Ticker)
-    coin_price = coin_info['last']  # coin_info['close'] == coin_info['last']
+def get_coin_current_price(binance, ticker):
+    coin_info = binance.fetch_ticker(ticker)
+    coin_price = coin_info['last'] # coin_info['close'] == coin_info['last']
 
     return coin_price
