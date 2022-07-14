@@ -20,7 +20,7 @@ target_coin_ticker = "BTC/USDT"
 target_coin_symbol = "BTCUSDT"
 
 btc = binance.fetch_ticker(target_coin_ticker)
-btc_price = btc['close']
+coin_price = btc['close']
 
 pprint.pprint(btc)
 
@@ -66,22 +66,50 @@ try:
 except Exception as e:
     print("error:", e)
 
-# --------------------------------------------
-coin_price = bf.get_coin_current_price(binance, target_coin_ticker)
-max_amount_for_buy = round(bf.get_amount(
-    float(balance['USDT']['total']), coin_price, 0.1), 3) * leverage
+# ---------------- variables ------------------
 
+min_candle_15 = bf.get_ohlcv(binance, target_coin_ticker, '15m')
+ma5_before_2 = bf.get_MA(min_candle_15, 5, -4)
+ma5_before_1 = bf.get_MA(min_candle_15, 5, -3)
+ma5_now = bf.get_MA(min_candle_15, 5, -2)
+
+ma20_now = bf.get_MA(min_candle_15, 20, -2)
+
+
+# --------------- working part ----------------------
+coin_price = bf.get_coin_current_price(binance, target_coin_ticker)
+
+# rate 0.1 -> 10%
+max_amount = round(bf.get_amount(
+    float(balance['USDT']['total']), coin_price, 0.5), 3) * leverage
+one_percent_amount = max_amount / 100.0
+first_amount = one_percent_amount * 5.0
+
+"""
+DCA: 5 -> 10 -> 20 -> 40 -> 80
+"""
 
 # short to long (sell position)
 abs_amt = abs(amt)
 
 if amt == 0:
     print("NO POSITION")
+
+    if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 < ma5_now:
+        print("sell/short")
+        binance.create_limit_sell_order(
+            target_coin_ticker, first_amount, coin_price)
+
+    if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now:
+        print("buy/long")
+        binance.create_limit_buy_order(
+            target_coin_ticker, first_amount, coin_price)
 else:
     if amt < 0:
         print("SHORT POSITION")
     else:
         print("LONG POSITION")
+
 
 # long sell
 entry_price_long = entry_price * 1.001
@@ -91,7 +119,6 @@ entry_price_short = entry_price * 0.999
 
 # ------------------ status -------------------
 print("---------------- indicators info ----------------")
-min_candle_15 = bf.get_ohlcv(binance, target_coin_ticker, '15m')
 print("Price:", min_candle_15['close'][-3], "->",
       min_candle_15['close'][-2], "->", min_candle_15['close'][-1])
 print("5_day_MA:", bf.get_MA(min_candle_15, 5, -3), "->",
