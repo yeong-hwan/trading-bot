@@ -75,6 +75,8 @@ ma5_now = bf.get_MA(min_candle_15, 5, -2)
 
 ma20_now = bf.get_MA(min_candle_15, 20, -2)
 
+rsi_14 = bf.get_RSI(min_candle_15, 14, -1)
+
 
 # --------------- working part ----------------------
 coin_price = bf.get_coin_current_price(binance, target_coin_ticker)
@@ -95,20 +97,35 @@ abs_amt = abs(amt)
 if amt == 0:
     print("NO POSITION")
 
-    if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 < ma5_now:
+    if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 > ma5_now and rsi_14 >= 35.0:
         print("sell/short")
-        binance.create_limit_sell_order(
-            target_coin_ticker, first_amount, coin_price)
 
-    if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now:
+        binance.cancel_all_orders(target_coin_ticker)
+        time.sleep(0.1)
+
+        print(binance.create_limit_sell_order(
+            target_coin_ticker, first_amount, coin_price))
+
+        bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+    if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now and rsi_14 <= 65.0:
         print("buy/long")
-        binance.create_limit_buy_order(
-            target_coin_ticker, first_amount, coin_price)
+
+        binance.cancel_all_orders(target_coin_ticker)
+        time.sleep(0.1)
+
+        print(binance.create_limit_buy_order(
+            target_coin_ticker, first_amount, coin_price))
+
+        bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
 else:
     if amt < 0:
         print("SHORT POSITION")
     else:
         print("LONG POSITION")
+
+bf.set_stop_loss(binance, target_coin_ticker, 0.5)
 
 
 # long sell
