@@ -39,6 +39,7 @@ time.sleep(0.1)
 # maker_long
 # binance.create_limit_buy_order(target_coin_ticker, 0.001, btc_price)
 
+
 # ------------------- setting ------------------------
 '''
 entry_price: average buy price
@@ -93,31 +94,31 @@ DCA: 5 -> 10 -> 20 -> 40 -> 80
 
 # short to long (sell position)
 abs_amt = abs(amt)
+target_rate = 0.001
+target_revenue_rate = target_rate * 100.0
 
 if amt == 0:
     print("NO POSITION")
 
     if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 > ma5_now and rsi_14 >= 35.0:
-        print("sell/short")
+        print("----- sell / short -----")
 
         binance.cancel_all_orders(target_coin_ticker)
         time.sleep(0.1)
 
+        coin_price = bf.get_coin_current_price(binance, target_coin_ticker)
         print(binance.create_limit_sell_order(
             target_coin_ticker, first_amount, coin_price))
 
-        bf.set_stop_loss(binance, target_coin_ticker, 0.5)
-
     if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now and rsi_14 <= 65.0:
-        print("buy/long")
+        print("----- buy / long -----")
 
         binance.cancel_all_orders(target_coin_ticker)
         time.sleep(0.1)
 
+        coin_price = bf.get_coin_current_price(binance, target_coin_ticker)
         print(binance.create_limit_buy_order(
             target_coin_ticker, first_amount, coin_price))
-
-        bf.set_stop_loss(binance, target_coin_ticker, 0.5)
 
 else:
     if amt < 0:

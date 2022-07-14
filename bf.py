@@ -101,6 +101,7 @@ def set_stop_loss(binance, ticker, cut_rate):
         print("--------------- STOPLOSS SETTING DONE ---------------")
 
 
+
 # amount for buying
 def get_amount(usdt, coin_price, rate):
 
@@ -117,6 +118,6 @@ def get_amount(usdt, coin_price, rate):
 
 def get_coin_current_price(binance, ticker):
     coin_info = binance.fetch_ticker(ticker)
-    coin_price = coin_info['last'] # coin_info['close'] == coin_info['last']
+    coin_price = coin_info['last']  # coin_info['close'] == coin_info['last']
 
     return coin_price
