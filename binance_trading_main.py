@@ -2,6 +2,8 @@ import ccxt
 import time
 import pandas as pd
 import pprint
+
+from pyrsistent import b
 import bf
 
 access = "Zd2awwadeB2BFrxvs3tLQixrpVtkM8PfvvCVZAHeaF1RSYWckSOdUfJvwt6elXeF"
@@ -97,9 +99,11 @@ abs_amt = abs(amt)
 target_rate = 0.001
 target_revenue_rate = target_rate * 100.0
 
+# no position -> taking position
 if amt == 0:
     print("NO POSITION")
 
+    # short position
     if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 > ma5_now and rsi_14 >= 35.0:
         print("----- sell / short -----")
 
@@ -110,6 +114,7 @@ if amt == 0:
         print(binance.create_limit_sell_order(
             target_coin_ticker, first_amount, coin_price))
 
+    # long position
     if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now and rsi_14 <= 65.0:
         print("----- buy / long -----")
 
@@ -120,11 +125,151 @@ if amt == 0:
         print(binance.create_limit_buy_order(
             target_coin_ticker, first_amount, coin_price))
 
+    bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+# after taking position
 else:
+    buy_percent = abs_amt / one_percent_amount
+    print("Buy Percent:", buy_percent)
+
+    # long position revenue_rate
+    revenue_rate = (coin_price - entry_price) / entry_price * 100.0
+
+    # short position revenue_rate
     if amt < 0:
-        print("SHORT POSITION")
+        revenue_rate *= -1
+
+    # leverage revenue(profit) rate
+    leverage_revenue_rate = revenue_rate * leverage
+    print("Revenue Rate:", revenue_rate,
+          "Real Revenue Rate:", leverage_revenue_rate)
+
+    # threshold rate for loss cut
+    loss_cut_rate = -5.0
+    leverage_loss_cut_rate = loss_cut_rate * leverage
+    print("Loss Cut Rate:", loss_cut_rate,
+          "Real Loss Cut Rate:", leverage_loss_cut_rate)
+
+    # threshold rate for scale
+    after_enter_rate = -1.0
+
+    if buy_percent <= 5.0:
+        after_enter_rate = -0.5
+    elif buy_percent <= 10.0:
+        after_enter_amount = -1.0
+    elif buy_percent <= 20.0:
+        after_enter_amount = -2.0
+    elif buy_percent <= 40.0:
+        after_enter_amount = -3.0
+    elif buy_percent <= 80.0:
+        after_enter_rate = -5.0
+
+    leverage_loss_cut_rate = after_enter_rate * leverage
+    print("After Enter Rate:", after_enter_rate,
+          " Real After Enter Rate:", leverage_loss_cut_rate)
+
+# -----------------------------------------------------------------------------------------
+    # short position
+    if amt < 0:
+        # chance for switch to long position
+        if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now:
+            # close short & take long
+            if revenue_rate >= target_revenue_rate:
+                binance.cancel_all_orders(target_coin_ticker)
+                time.sleep(0.1)
+
+                coin_price = bf.get_coin_current_price(
+                    binance, target_coin_ticker)
+
+                print(binance.create_limit_buy_order(
+                    target_coin_ticker, first_amount + abs_amt, coin_price))
+
+            bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+        # still short has upper hand
+        if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 > ma5_now:
+
+            after_enter_amount = abs_amt
+
+            if max_amount < abs_amt + after_enter_amount:
+                after_enter_amount = max_amount - abs_amt
+
+            if revenue_rate <= after_enter_rate and max_amount >= abs_amt + after_enter_amount:
+                binance.cancel_all_orders(target_coin_ticker)
+                time.sleep(0.1)
+
+                coin_price = bf.get_coin_current_price(
+                    binance, target_coin_ticker)
+
+                # increase short position
+                print(binance.create_limit_sell_order(
+                    target_coin_ticker, after_enter_amount, coin_price))
+
+            bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+        # stop loss
+        if revenue_rate <= loss_cut_rate and buy_percent >= 90.0:
+            binance.cancel_all_orders(target_coin_ticker)
+            time.sleep(0.1)
+
+            coin_price = bf.get_coin_current_price(
+                binance, target_coin_ticker)
+
+            print(binance.create_limit_buy_order(
+                target_coin_ticker, abs_amt / 2.0, coin_price))
+
+        bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+# ----------------------------------------------------------------------------------------
+    # long position
     else:
-        print("LONG POSITION")
+        if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 > ma5_now:
+            # close long & take short
+            if revenue_rate >= target_revenue_rate:
+                binance.cancel_all_orders(target_coin_ticker)
+                time.sleep(0.1)
+
+                coin_price = bf.get_coin_current_price(
+                    binance, target_coin_ticker)
+
+                print(binance.create_limit_sell_order(
+                    target_coin_ticker, first_amount + abs_amt, coin_price))
+
+            bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+        # still long has upper hand
+        if ma5_now < ma20_now and ma5_before_2 > ma5_before_1 and ma5_before_1 < ma5_now:
+            after_enter_amount = abs_amt
+
+            if max_amount < abs_amt + after_enter_amount:
+                after_enter_amount = max_amount - abs_amt
+
+            if revenue_rate <= after_enter_rate and max_amount >= abs_amt + after_enter_amount:
+                binance.cancel_all_orders(target_coin_ticker)
+                time.sleep(0.1)
+
+                coin_price = bf.get_coin_current_price(
+                    binance, target_coin_ticker)
+
+                # increase long position
+                print(binance.create_limit_buy_order(
+                    target_coin_ticker, after_enter_amount, coin_price))
+
+            bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
+        # stop loss
+        if revenue_rate <= loss_cut_rate and buy_percent >= 90.0:
+            binance.cancel_all_orders(target_coin_ticker)
+            time.sleep(0.1)
+
+            coin_price = bf.get_coin_current_price(
+                binance, target_coin_ticker)
+
+            print(binance.create_limit_sell_order(
+                target_coin_ticker, abs_amt / 2.0, coin_price))
+
+        bf.set_stop_loss(binance, target_coin_ticker, 0.5)
+
 
 bf.set_stop_loss(binance, target_coin_ticker, 0.5)
 
