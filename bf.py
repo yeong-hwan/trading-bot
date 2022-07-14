@@ -2,7 +2,53 @@ import pandas as pd
 import time
 
 
+from cryptography.fernet import Fernet
+from rsa import encrypt
+
+# encryption decryption class
+
+
+class simple_en_decrypt:
+    def __init__(self, key=None):
+        if key is None:  # 키가 없다면
+            key = Fernet.generate_key()  # 키를 생성한다
+        self.key = key
+        self.f = Fernet(self.key)
+
+    def encrypt(self, data, is_out_string=True):
+        if isinstance(data, bytes):
+            ou = self.f.encrypt(data)  # 바이트형태이면 바로 암호화
+        else:
+            ou = self.f.encrypt(data.encode('utf-8'))  # 인코딩 후 암호화
+        if is_out_string is True:
+            return ou.decode('utf-8')  # 출력이 문자열이면 디코딩 후 반환
+        else:
+            return ou
+
+    def decrypt(self, data, is_out_string=True):
+        if isinstance(data, bytes):
+            ou = self.f.decrypt(data)  # 바이트형태이면 바로 복호화
+        else:
+            ou = self.f.decrypt(data.encode('utf-8'))  # 인코딩 후 복호화
+        if is_out_string is True:
+            return ou.decode('utf-8')  # 출력이 문자열이면 디코딩 후 반환
+        else:
+            return ou
+
+
+# key = Fernet.generate_key()
+# print(key)
+
+simple_en_decrypt = simple_en_decrypt(
+    b'ICYcnGOXMmtPNDkTyQ2Z-Vn4jAkzeGUNb92qobkzdL4=')
+
+original_access = "Zd2awwadeB2BFrxvs3tLQixrpVtkM8PfvvCVZAHeaF1RSYWckSOdUfJvwt6elXeF"
+encrypt_original_access = simple_en_decrypt.encrypt(original_access)
+
+
+
 # ----------------- binance functions -----------------------
+
 
 '''
 ohclv: candle data
@@ -43,7 +89,6 @@ def get_ohlcv(binance, ticker, period):
 # cut_rate: (1.0: -100% clearing, 0.1: -10% stop loss)
 def set_stop_loss(binance, ticker, cut_rate):
     time.sleep(0.1)
-
     orders = binance.fetch_orders(ticker)
 
     stop_loss_ok = False
@@ -54,7 +99,7 @@ def set_stop_loss(binance, ticker, cut_rate):
             stop_loss_ok = True
             break
 
-    # if no stop loss => take order
+    # if no stop loss -> take order
     if stop_loss_ok == False:
 
         time.sleep(10.0)
@@ -65,23 +110,20 @@ def set_stop_loss(binance, ticker, cut_rate):
         amt = 0
         entry_price = 0
         leverage = 0
+        for posi in balance['info']['positions']:
+            if posi['symbol'] == ticker.replace("/", ""):
+                entry_price = float(posi['entryPrice'])
+                amt = float(posi['positionAmt'])
+                leverage = float(posi['leverage'])
 
-        for position in balance['info']['positions']:
-            if position['symbol'] == ticker.replace("/", ""):
-                entry_price = float(position['entry_price'])
-                amt = float(position['position_amt'])
-                leverage = float(position['leverage'])
-
-        # if long, get short posiotion
         side = "sell"
-        # if short, get long posiotion
         if amt < 0:
             side = "buy"
 
         danger_rate = ((100.0 / leverage) * cut_rate) * 1.0
 
         # stop loss price for long
-        stop_price = entry_price * (1.0 - danger_rate * 0.01)
+        stop_price = entry_price * (1.0 - danger_rat * 0.01)
 
         # stop loss price for short
         if amt < 0:
@@ -94,12 +136,12 @@ def set_stop_loss(binance, ticker, cut_rate):
 
         print("side:", side, "   stop_price:",
               stop_price, "   entry_price:", entry_price)
+
         # stop loss order
         print(binance.create_order(ticker, 'STOP_MARKET',
               side, abs(amt), stop_price, params))
 
         print("--------------- STOPLOSS SETTING DONE ---------------")
-
 
 
 # amount for buying

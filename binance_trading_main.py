@@ -1,17 +1,21 @@
+# -------- libraries ---------
 import ccxt
 import time
 import pandas as pd
 import pprint
-
-from pyrsistent import b
+# -------- import key & functions ---------
+import encrypt_key
+import original_key
 import bf
 
-access = "Zd2awwadeB2BFrxvs3tLQixrpVtkM8PfvvCVZAHeaF1RSYWckSOdUfJvwt6elXeF"
-secret = "9pumuiCRihNdUTY7BO2d0sRZrBaeII7oERqNe7kDpqKoL9pVDVLQlMSsLFqZ4CGb"
+# ---------- key decoding ---------------
+simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
+binance_access = simple_en_decrypt.decrypt(original_key.access)
+binance_secret = simple_en_decrypt.decrypt(original_key.secret)
 
 binance = ccxt.binance(config={
-    'apiKey': access,
-    'secret': secret,
+    'apiKey': binance_access,
+    'secret': binance_secret,
     'enableRateLimit': True,
     'options': {
         'defaultType': 'future'
@@ -269,7 +273,6 @@ else:
                 target_coin_ticker, abs_amt / 2.0, coin_price))
 
         bf.set_stop_loss(binance, target_coin_ticker, 0.5)
-
 
 bf.set_stop_loss(binance, target_coin_ticker, 0.5)
 
