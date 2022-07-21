@@ -3,10 +3,12 @@ import ccxt
 import time
 import pandas as pd
 import pprint
-# -------- import key & functions ---------
+import json
+# -------- import key & functions & alert ---------
 import encrypt_key
 import original_key
 import bf
+import line_alert
 
 # ---------- key decoding ---------------
 simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
@@ -33,6 +35,16 @@ pprint.pprint(btc)
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
+# -------------- time & line alert ---------------------
+time_info = time.gmtime()
+hour = time_info.tm_hour
+minute = time_info.tm_min
+
+print(time_info)
+print(line_alert.send_message("Binance Trading Bot Working"))
+
+# if want to execute bot, server time = set time - 9
+
 # taker_short
 # binance.create_market_sell_order(target_coin_ticker, 0.001)
 
@@ -45,6 +57,17 @@ time.sleep(0.1)
 # maker_long
 # binance.create_limit_buy_order(target_coin_ticker, 0.001, btc_price)
 
+# -------------- break trough list -----------------
+break_through_list = list()
+
+break_through_file_path = "break_through_list.json"
+
+try:
+    with open(break_through_file_path, 'r') as json_file:
+        break_through_list = json.load(json_file)
+
+except Exception as e:
+    print("Exception by first run")
 
 # ------------------- setting ------------------------
 '''
@@ -105,11 +128,11 @@ target_revenue_rate = target_rate * 100.0
 
 # no position -> taking position
 if amt == 0:
-    print("NO POSITION")
+    print("------------------\nNO POSITION\n------------------")
 
     # short position
     if ma5_now > ma20_now and ma5_before_2 < ma5_before_1 and ma5_before_1 > ma5_now and rsi_14 >= 35.0:
-        print("----- sell / short -----")
+        print("------------------\nsell / short\n-----------------")
 
         binance.cancel_all_orders(target_coin_ticker)
         time.sleep(0.1)

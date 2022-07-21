@@ -1,52 +1,5 @@
 import pandas as pd
 import time
-
-
-from cryptography.fernet import Fernet
-from rsa import encrypt
-
-# encryption decryption class
-
-
-class simple_en_decrypt:
-    def __init__(self, key=None):
-        if key is None:  # 키가 없다면
-            key = Fernet.generate_key()  # 키를 생성한다
-        self.key = key
-        self.f = Fernet(self.key)
-
-    def encrypt(self, data, is_out_string=True):
-        if isinstance(data, bytes):
-            ou = self.f.encrypt(data)  # 바이트형태이면 바로 암호화
-        else:
-            ou = self.f.encrypt(data.encode('utf-8'))  # 인코딩 후 암호화
-        if is_out_string is True:
-            return ou.decode('utf-8')  # 출력이 문자열이면 디코딩 후 반환
-        else:
-            return ou
-
-    def decrypt(self, data, is_out_string=True):
-        if isinstance(data, bytes):
-            ou = self.f.decrypt(data)  # 바이트형태이면 바로 복호화
-        else:
-            ou = self.f.decrypt(data.encode('utf-8'))  # 인코딩 후 복호화
-        if is_out_string is True:
-            return ou.decode('utf-8')  # 출력이 문자열이면 디코딩 후 반환
-        else:
-            return ou
-
-
-# key = Fernet.generate_key()
-# print(key)
-
-simple_en_decrypt = simple_en_decrypt(
-    b'ICYcnGOXMmtPNDkTyQ2Z-Vn4jAkzeGUNb92qobkzdL4=')
-
-original_access = "Zd2awwadeB2BFrxvs3tLQixrpVtkM8PfvvCVZAHeaF1RSYWckSOdUfJvwt6elXeF"
-encrypt_original_access = simple_en_decrypt.encrypt(original_access)
-
-
-
 # ----------------- binance functions -----------------------
 
 
@@ -123,7 +76,7 @@ def set_stop_loss(binance, ticker, cut_rate):
         danger_rate = ((100.0 / leverage) * cut_rate) * 1.0
 
         # stop loss price for long
-        stop_price = entry_price * (1.0 - danger_rat * 0.01)
+        stop_price = entry_price * (1.0 - danger_rate * 0.01)
 
         # stop loss price for short
         if amt < 0:
