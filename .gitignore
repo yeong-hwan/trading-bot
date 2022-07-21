@@ -3,3 +3,5 @@ encrypt_key.py
 original_key.py
 
 autobot-key.pem
+
+node_module/
