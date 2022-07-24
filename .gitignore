@@ -5,3 +5,7 @@ original_key.py
 autobot-key.pem
 
 node_module/
+
+binance_test.py
+
+binance_trading_update

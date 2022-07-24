@@ -24,51 +24,63 @@ binance = ccxt.binance(config={
     }
 })
 
-target_coin_ticker = "BTC/USDT"
-target_coin_symbol = "BTCUSDT"
 
-btc = binance.fetch_ticker(target_coin_ticker)
-coin_price = btc['close']
+tickers = binance.fetch_tickers()
+invest_rate = 0.2
+coin_cnt = 5.0
 
-pprint.pprint(btc)
+# ----------------- json control ---------------------
+break_through_list = list()
+
+break_through_file_path = "/var/trading-bot/break_through_list.json"
+try:
+    with open(break_through_file_path, 'r') as json_file:
+        break_through_lis = json.load(json_file)
+
+except Exception as e:
+    print("Exception by First")
+
+
+change_value_dict = dict()
+
+change_value_file_path = "/var/trading-bot/change_value_dict.json"
+try:
+    with open(change_value_file_path, 'r') as json_file:
+        change_value_dict = json.load(json_file)
+
+except Exception as e:
+    print("Exception by First")
+
 
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
-# -------------- time & line alert ---------------------
-time_info = time.gmtime()
-hour = time_info.tm_hour
-minute = time_info.tm_min
 
-print(time_info)
-print(line_alert.send_message("Binance Trading Bot Working"))
+set_leverage = 10
+# -------------- time & line alert ---------------------
+#
+
+# print(time_info)
+# print(line_alert.send_message("Binance Trading Bot Working"))
 
 # if want to execute bot, server time = set time - 9
 
-# taker_short
-# binance.create_market_sell_order(target_coin_ticker, 0.001)
+top_coin_list = bf.get_top_coin_list(binance, 10)
 
-# taker_long
-# binance.create_market_buy_order(target_coin_ticker, 0.001)
+# ---- trading for except btc, eth ----
+# try:
+#     top_coin_list.remove("BTC/USDT")
+#     top_coin_list.remove("ETH/USDT")
+# except Exception as e:
+#     print("Exception", e)
 
-# maker_short
-# binance.create_limit_sell_order(target_coin_ticker, 0.001, btc_price)
+balance = binance.fetch_balance(params={"type": "future"})
+time.sleep(0.1)
 
-# maker_long
-# binance.create_limit_buy_order(target_coin_ticker, 0.001, btc_price)
-
-# -------------- break trough list -----------------
-break_through_list = list()
-
-break_through_file_path = "break_through_list.json"
-
-try:
-    with open(break_through_file_path, 'r') as json_file:
-        break_through_list = json.load(json_file)
-
-except Exception as e:
-    print("Exception by first run")
-
+time_info = time.gmtime()
+hour = time_info.tm_hour
+minute = time_info.tm_min
+print(hour, minute)
 # ------------------- setting ------------------------
 '''
 entry_price: average buy price
