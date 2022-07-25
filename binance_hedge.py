@@ -241,5 +241,37 @@ for ticker in tickers:
 
                         recent_high_point_1, recent_high_point_2 = 0, 0
                         recent_high_value_1, recent_high_value_2 = 0, 0
+
+                        now_rsi = bf.get_RSI(candle_5m, 14, -1)
+
+                        for idx in range(3, 20):
+                            left_rsi = bf.get_RSI(candle_5m, 14, -(idx-1))
+                            mid_rsi = bf.get_RSI(candle_5m, 14, -(idx))
+                            right_rsi = bf.get_RSI(candle_5m, 14, -(idx+1))
+
+                            # V sahpe point
+                            if left_rsi > mid_rsi < right_rsi:
+                                # non setting
+                                if recent_high_point_1 == 0:
+                                    if now_rsi > mid_rsi:
+                                        recent_high_point_1 = idx
+                                        recent_high_value_1 = mid_rsi
+
+                                # setted
+                                else:
+                                    # non setting
+                                    if recent_high_point_2 == 0:
+                                        if recent_high_value_1 > mid_rsi:
+                                            recent_high_point_2 = idx
+                                            recent_high_value_2 = mid_rsi
+
+                                            # we find two point for drawing trend line
+                                            break
+
+                        print("recent_high_point_1 X:", recent_high_point_1,
+                              "recent_high_value_1 Y:", recent_high_value_1)
+                        print("recent_high_point_2 X:", recent_high_point_2,
+                              "recent_high_value_2 Y:", recent_high_value_2)
+
     except Exception as e:
         print("Exception:", e)
