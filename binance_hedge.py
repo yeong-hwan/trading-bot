@@ -4,8 +4,6 @@ import time
 import pandas as pd
 import pprint
 import json
-
-from sympy import isolate
 # -------- import key & functions & alert ---------
 import encrypt_key
 import original_key
@@ -239,8 +237,8 @@ for ticker in tickers:
                         if change_value < coin_price * 0.0025:
                             change_value = coin_price * 0.0025
 
-                        recent_high_point_1, recent_high_point_2 = 0, 0
-                        recent_high_value_1, recent_high_value_2 = 0, 0
+                        high_point_1, high_point_2 = 0, 0
+                        high_value_1, high_value_2 = 0, 0
 
                         now_rsi = bf.get_RSI(candle_5m, 14, -1)
 
@@ -252,26 +250,202 @@ for ticker in tickers:
                             # V sahpe point
                             if left_rsi > mid_rsi < right_rsi:
                                 # non setting
-                                if recent_high_point_1 == 0:
+                                if high_point_1 == 0:
                                     if now_rsi > mid_rsi:
-                                        recent_high_point_1 = idx
-                                        recent_high_value_1 = mid_rsi
+                                        high_point_1 = idx
+                                        high_value_1 = mid_rsi
 
                                 # setted
                                 else:
                                     # non setting
-                                    if recent_high_point_2 == 0:
-                                        if recent_high_value_1 > mid_rsi:
-                                            recent_high_point_2 = idx
-                                            recent_high_value_2 = mid_rsi
+                                    if high_point_2 == 0:
+                                        if high_value_1 > mid_rsi:
+                                            high_point_2 = idx
+                                            high_value_2 = mid_rsi
 
                                             # we find two point for drawing trend line
                                             break
 
-                        print("recent_high_point_1 X:", recent_high_point_1,
-                              "recent_high_value_1 Y:", recent_high_value_1)
-                        print("recent_high_point_2 X:", recent_high_point_2,
-                              "recent_high_value_2 Y:", recent_high_value_2)
+                        print("high_point_1 X:", high_point_1,
+                              "high_value_1 Y:", high_value_1)
+                        print("high_point_2 X:", high_point_2,
+                              "high_value_2 Y:", high_value_2)
+
+                        is_long_divergence = False
+
+                        # valid when find two points
+                        if high_point_1 != 0 and high_point_2 != 0:
+                            if abs(amt_long) == 0 and candle_5m['close'][-(high_point_1)] < candle_5m['close'][-(high_point_2)] and len(break_through_list) < coin_cnt:
+                                if high_value_1 <= 35.0 or high_value_2 <= 35.0:
+                                    is_long_divergence = True
+
+                        low_point_1, low_point_2 = 0, 0
+                        low_value_1, low_value_2 = 0, 0
+
+                        for idx in range(3, 20):
+                            left_rsi = bf.get_RSI(candle_5m, 14, -(idx-1))
+                            mid_rsi = bf.get_RSI(candle_5m, 14, -(idx))
+                            right_rsi = bf.get_RSI(candle_5m, 14, -(idx+1))
+
+                            # ^ sahpe point
+                            if left_rsi < mid_rsi > right_rsi:
+                                # non setting
+                                if low_point_1 == 0:
+                                    if now_rsi < mid_rsi:
+                                        low_point_1 = idx
+                                        low_value_1 = mid_rsi
+
+                                # setted
+                                else:
+                                    # non setting
+                                    if low_point_2 == 0:
+                                        if low_value_1 < mid_rsi:
+                                            low_point_2 = idx
+                                            low_value_2 = mid_rsi
+
+                                            # we find two point for drawing trend line
+                                            break
+
+                        print("low_point_1 X:", low_point_1,
+                              "low_value_1 Y:", low_value_1)
+                        print("low_point_2 X:", low_point_2,
+                              "low_value_2 Y:", low_value_2)
+
+                        is_short_divergence = False
+
+                        # valid when find two points
+                        if low_point_1 != 0 and low_point_2 != 0:
+                            if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(break_through_list) < coin_cnt:
+                                if high_value_1 >= 65.0 or high_value_2 >= 65.0:
+                                    is_short_divergence = True
+
+                        # long position chance
+                        if is_long_divergence == True and is_short_divergence == False:
+                            params = {
+                                'positionSide': 'LONG'
+                            }
+                            data = binance.create_market_buy_order(
+                                target_coin_ticker, buy_amount, params)
+
+                            target_price = data['price'] + change_value
+                            print(binance.create_limit_sell_order(
+                                target_coin_ticker, data['amount'], target_price, params))
+
+                            total_DCA_amt = 0
+                            DCA_amt = buy_amount
+
+                            print("DCA_amt:", DCA_amt)
+
+                            i = 1
+
+                            line_data = None
+
+                            while total_DCA_amt + DCA_amt <= max_DCA_amount:
+                                print("-------", i, "Grid", "------")
+
+                                # DCA_amt down -> more grid
+                                DCA_amt *= 2.0
+
+                                # change_value * 2.0 -> grid distance
+                                DCA_price = data['price'] - \
+                                    ((change_value * 2.0) * float(i))
+
+                                params = {
+                                    'positionSide': 'LONG'
+                                }
+
+                                line_data = binance.create_limit_buy_order(
+                                    target_coin_ticker, DCA_amt, DCA_price, params)
+
+                                total_DCA_amt += DCA_amt
+
+                                i += 1
+                                time.sleep(0.1)
+
+                            stop_price = line_data['price'] - \
+                                (change_value * 2.0)
+                            bf.set_stop_loss_long_price(
+                                binance, target_coin_ticker, stop_price, False)
+
+                            change_value_dict[target_coin_ticker] = change_value
+
+                            with open(change_value_file_path, 'w') as outfile:
+                                json.dump(change_value_dict, outfile)
+
+                            break_through_list.append(target_coin_ticker)
+
+                            with open(break_through_file_path, 'w') as outfile:
+                                json.dump(break_through_list, outfile)
+
+                            line_alert.send_message("RSI Divergence Start Long : " + target_coin_ticker + " X : " + str(
+                                high_point_1) + "|" + str(high_value_1) + ", Y : " + str(high_point_2) + "|" + str(high_value_2))
+
+                            balance = binance.fetch_balance(
+                                params={"type": "future"})
+
+                        # short position chance
+                        if is_short_divergence == True and is_long_divergence == False:
+                            params = {
+                                'positionSide': 'SHORT'
+                            }
+                            data = binance.create_market_sell_order(
+                                target_coin_ticker, buy_amount, params)
+
+                            target_price = data['price'] - change_value
+                            print(binance.create_limit_buy_order(
+                                target_coin_ticker, data['amount'], target_price, params))
+
+                            total_DCA_amt = 0
+                            DCA_amt = buy_amount
+
+                            print("DCA_amt:", DCA_amt)
+
+                            i = 1
+
+                            line_data = None
+
+                            while total_DCA_amt + DCA_amt <= max_DCA_amount:
+                                print("-------", i, "Grid", "------")
+
+                                # DCA_amt down -> more grid
+                                DCA_amt *= 2.0
+
+                                # change_value * 2.0 -> grid distance
+                                DCA_price = data['price'] + \
+                                    ((change_value * 2.0) * float(i))
+
+                                params = {
+                                    'positionSide': 'SHORT'
+                                }
+
+                                line_data = binance.create_limit_sell_order(
+                                    target_coin_ticker, DCA_amt, DCA_price, params)
+
+                                total_DCA_amt += DCA_amt
+
+                                i += 1
+                                time.sleep(0.1)
+
+                            stop_price = line_data['price'] + \
+                                (change_value * 2.0)
+                            bf.set_stop_loss_short_price(
+                                binance, target_coin_ticker, stop_price, False)
+
+                            change_value_dict[target_coin_ticker] = change_value
+
+                            with open(change_value_file_path, 'w') as outfile:
+                                json.dump(change_value_dict, outfile)
+
+                            break_through_list.append(target_coin_ticker)
+
+                            with open(break_through_file_path, 'w') as outfile:
+                                json.dump(break_through_list, outfile)
+
+                            line_alert.send_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
+                                low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(lowh_value_2))
+
+                            balance = binance.fetch_balance(
+                                params={"type": "future"})
 
     except Exception as e:
         print("Exception:", e)
