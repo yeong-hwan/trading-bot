@@ -30,7 +30,7 @@ invest_rate = 0.2
 coin_cnt = 5.0
 
 # ----------------- line alert -----------------------
-line_alert.send_message("RSI Divergence End:" + target_coin_ticker)
+line_alert.send_message("Binance hedge running")
 
 # ----------------- json control ---------------------
 break_through_list = list()
