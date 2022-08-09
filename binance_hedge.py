@@ -327,11 +327,11 @@ for ticker in tickers:
                             params = {
                                 'positionSide': 'LONG'
                             }
-                            data = binance.create_market_buy_order(
+                            data = bf.binance.create_market_buy_order(
                                 target_coin_ticker, buy_amount, params)
 
                             target_price = data['price'] + change_value
-                            print(binance.create_limit_sell_order(
+                            print(bf.inance.create_limit_sell_order(
                                 target_coin_ticker, data['amount'], target_price, params))
 
                             total_DCA_amt = 0
@@ -357,7 +357,7 @@ for ticker in tickers:
                                     'positionSide': 'LONG'
                                 }
 
-                                line_data = binance.create_limit_buy_order(
+                                line_data = bf.binance.create_limit_buy_order(
                                     target_coin_ticker, DCA_amt, DCA_price, params)
 
                                 total_DCA_amt += DCA_amt
@@ -391,11 +391,11 @@ for ticker in tickers:
                             params = {
                                 'positionSide': 'SHORT'
                             }
-                            data = binance.create_market_sell_order(
+                            data = bf.binance.create_market_sell_order(
                                 target_coin_ticker, buy_amount, params)
 
                             target_price = data['price'] - change_value
-                            print(binance.create_limit_buy_order(
+                            print(bf.binance.create_limit_buy_order(
                                 target_coin_ticker, data['amount'], target_price, params))
 
                             total_DCA_amt = 0
@@ -421,7 +421,7 @@ for ticker in tickers:
                                     'positionSide': 'SHORT'
                                 }
 
-                                line_data = binance.create_limit_sell_order(
+                                line_data = bf.binance.create_limit_sell_order(
                                     target_coin_ticker, DCA_amt, DCA_price, params)
 
                                 total_DCA_amt += DCA_amt
@@ -444,7 +444,7 @@ for ticker in tickers:
                             with open(break_through_file_path, 'w') as outfile:
                                 json.dump(break_through_list, outfile)
 
-                            line_alert.send_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
+                            line_alert.gsend_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
                                 low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(lowh_value_2))
 
                             balance = binance.fetch_balance(
