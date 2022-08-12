@@ -25,8 +25,9 @@ def create_limit_sell_order(self, symbol, amount, price, params={}):
 def create_market_buy_order(self, symbol, amount, price, params={}):
     return self.create_order(symbol, 'market', 'buy', amount, price, params)
 
+
 def create_market_sell_order(self, symbol, amount, price, params={}):
-    return self.create_order(symbol, 'market', 'sell', amount, price, params)
+    return self.create_order(symbol, 'limit', 'sell', amount, price, params)
 
 
 def get_RSI(ohlcv, period, standard_date):
@@ -332,11 +333,11 @@ def get_positioned_coin_cnt(binance):
 
 
 def get_top_coin_list(binance, top):
-    print("--------------Get Top Coin List Start-------------------")
+    # print("--------------Get Top Coin List Start-------------------")
 
     # 선물 마켓에서 거래중인 코인을 가져옵니다.
     tickers = binance.fetch_tickers()
-    pprint.pprint(tickers)
+    # pprint.pprint(tickers)
 
     dic_coin_money = dict()
     # 모든 선물 거래가능한 코인을 가져온다.
@@ -345,8 +346,8 @@ def get_top_coin_list(binance, top):
         try:
 
             if "/USDT" in ticker:
-                print(ticker, "----- \n",
-                      tickers[ticker]['baseVolume'] * tickers[ticker]['close'])
+                # print(ticker, "----- \n",
+                #   tickers[ticker]['baseVolume'] * tickers[ticker]['close'])
 
                 dic_coin_money[ticker] = tickers[ticker]['baseVolume'] * \
                     tickers[ticker]['close']
@@ -360,19 +361,19 @@ def get_top_coin_list(binance, top):
     coin_list = list()
     cnt = 0
     for coin_data in dic_sorted_coin_money:
-        print("####-------------", coin_data[0], coin_data[1])
+        # print("####-------------", coin_data[0], coin_data[1])
         cnt += 1
         if cnt <= top:
             coin_list.append(coin_data[0])
         else:
             break
 
-    print("--------------GetTopCoinList End-------------------")
+    # print("--------------GetTopCoinList End-------------------")
 
     return coin_list
 
 
-# 해당되는 리스트안에 해당 코인이 있는지 여부를 리턴하는 함수
+# 해당되는 리스트안에 해당 코인이 있는지 여부를 리턴
 def check_coin_in_list(coin_list, ticker):
     coin_in_list = False
     for coin_ticker in coin_list:
@@ -496,10 +497,10 @@ def get_min_amount(binance, ticker):
     coin_info = binance.fetch_ticker(ticker)
     coin_price = coin_info['last']
 
-    print("min_cost: ", min_cost)
-    print("min_amount: ", min_amount)
-    print("min_price: ", min_price)
-    print("coin_price: ", coin_price)
+    print("| min_cost: ", min_cost)
+    print("| min_amount: ", min_amount)
+    print("| min_price: ", min_price, "$")
+    print("| Coin_price: ", coin_price, "$")
 
     # get mininum unit price to be able to order
     if min_price < coin_price:
@@ -515,10 +516,11 @@ def get_min_amount(binance, ticker):
         # increase the order cost bigger than min cost
         # by the multiple number of minimum amount
         while min_order_cost < min_cost:
-            num_min_amount = num_min_amount + 1
+            num_min_amount += 1
             min_order_cost = min_price * (num_min_amount * min_amount)
 
-    return num_min_amount * min_amount
+    minimum_amount = num_min_amount * min_amount
+    return minimum_amount
 
 
 # 현재 평가금액

@@ -30,9 +30,11 @@ invest_rate = 0.2
 coin_cnt = 5.0
 
 # ----------------- line alert -----------------------
-line_alert.send_message("RSI Divergence End:" + target_coin_ticker)
+print("---------------------------------------------")
+# line_alert.send_message("binance_hedge running")
 
 # ----------------- json control ---------------------
+print("---------------------------------------------")
 break_through_list = list()
 
 break_through_file_path = "/var/trading-bot/break_through_list.json"
@@ -41,7 +43,7 @@ try:
         break_through_list = json.load(json_file)
 
 except Exception as e:
-    print("Exception by First")
+    print("| Exception by First | break_through")
 
 
 change_value_dict = dict()
@@ -52,14 +54,13 @@ try:
         change_value_dict = json.load(json_file)
 
 except Exception as e:
-    print("Exception by First")
-
+    print("| Exception by First | change_value")
 
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
 
-set_leverage = 10
+set_leverage = 3
 # -------------- time & line alert ---------------------
 #
 
@@ -68,7 +69,7 @@ set_leverage = 10
 
 # if want to execute bot, server time = set time - 9
 
-top_coin_list = bf.get_top_coin_list(binance, 10)
+top_coin_list = bf.get_top_coin_list(binance, 2)
 
 # ---- trading for except btc, eth ----
 # try:
@@ -83,10 +84,21 @@ time.sleep(0.1)
 time_info = time.gmtime()
 hour = time_info.tm_hour
 minute = time_info.tm_min
-print(hour, minute)
-# ------------------- working part ------------------------
-for ticker in tickers:
+mid_day = "AM"
+if hour >= 12:
+    hour -= 12
+    mid_day = "PM"
 
+
+print("---------------------------------------------\n|")
+print(f"| Server time | {hour} {mid_day} : {minute}\n|")
+print("---------------------------------------------\n")
+
+
+# ------------------- working part ------------------------
+ticker_order = 1
+
+for ticker in tickers:
     try:
         if "/USDT" in ticker:
             target_coin_ticker = ticker
@@ -94,17 +106,25 @@ for ticker in tickers:
             # top coin list OR break trought positioned
             if bf.check_coin_in_list(top_coin_list, ticker) == True or bf.check_coin_in_list(break_through_list, ticker) == True:
                 time.sleep(0.2)
-                print("target_coin_ticker:", target_coin_ticker)
+
+                print(f"{ticker_order}.")
+                ticker_order += 1
+
+                print("-------", "target_coin_ticker:",
+                      target_coin_ticker, "-------\n|")
 
                 target_coin_symbol = ticker.replace("/", "")
                 time.sleep(0.05)
 
                 minimum_amount = bf.get_min_amount(binance, target_coin_ticker)
-                print("minimum_amount:", minimum_amount)
 
-                print(balance['USDT'])
-                print("Total Money:", float(balance['USDT']['total']))
-                print("Remain Money:", float(balance['USDT']['free']))
+                print("|\n| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
+                print("| minimum_amount:", minimum_amount)
+
+                print("|", balance['USDT'], "\n|")
+
+                print("| Total Money:", float(balance['USDT']['total']))
+                print("| Remain Money:", float(balance['USDT']['free']))
 
                 leverage = 0
 
@@ -113,7 +133,7 @@ for ticker in tickers:
                 max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
                     float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
 
-                print("max_amount:", max_amount)
+                print("| max_amount:", max_amount)
 
                 # first enter 2
                 # DCA 2, 4, 8, 16
@@ -126,7 +146,7 @@ for ticker in tickers:
                 if buy_amount < minimum_amount:
                     buy_amount = minimum_amount
 
-                print("buy_amount:", buy_amount)
+                print("| buy_amount:", buy_amount)
 
                 max_DCA_amount = max_amount - buy_amount
 
@@ -138,7 +158,7 @@ for ticker in tickers:
                 # short position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'SHORT':
-                        print(position)
+                        # pprint.pprint(position)
                         amt_short = float(position["positionAmt"])
                         entry_price_short = float(position['entryPrice'])
                         leverage = float(position['leverage'])
@@ -148,7 +168,7 @@ for ticker in tickers:
                 # lon position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
-                        print(position)
+                        # pprint.pprint(position)
                         amt_long = float(position["positionAmt"])
                         entry_price_long = float(position['entryPrice'])
                         leverage = float(position['leverage'])
@@ -269,10 +289,12 @@ for ticker in tickers:
                                             # we find two point for drawing trend line
                                             break
 
-                        print("high_point_1 X:", high_point_1,
+                        print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                        print("| high_point_1 X:", high_point_1, "|",
                               "high_value_1 Y:", high_value_1)
-                        print("high_point_2 X:", high_point_2,
+                        print("| high_point_2 X:", high_point_2, "|",
                               "high_value_2 Y:", high_value_2)
+                        print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
 
                         is_long_divergence = False
 
@@ -309,9 +331,9 @@ for ticker in tickers:
                                             # we find two point for drawing trend line
                                             break
 
-                        print("low_point_1 X:", low_point_1,
+                        print("| low_point_1 X:", low_point_1, "|",
                               "low_value_1 Y:", low_value_1)
-                        print("low_point_2 X:", low_point_2,
+                        print("| low_point_2 X:", low_point_2, "|",
                               "low_value_2 Y:", low_value_2)
 
                         is_short_divergence = False
@@ -449,6 +471,8 @@ for ticker in tickers:
 
                             balance = binance.fetch_balance(
                                 params={"type": "future"})
+
+                print("--------------------------------------------\n")
 
     except Exception as e:
         print("Exception:", e)
