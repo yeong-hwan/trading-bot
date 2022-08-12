@@ -69,14 +69,14 @@ set_leverage = 3
 
 # if want to execute bot, server time = set time - 9
 
-top_coin_list = bf.get_top_coin_list(binance, 2)
+top_coin_list = bf.get_top_coin_list(binance, 7)
 
 # ---- trading for except btc, eth ----
-# try:
-#     top_coin_list.remove("BTC/USDT")
-#     top_coin_list.remove("ETH/USDT")
-# except Exception as e:
-#     print("Exception", e)
+try:
+    top_coin_list.remove("BTC/USDT")
+    top_coin_list.remove("ETH/USDT")
+except Exception as e:
+    print("Exception", e)
 
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
