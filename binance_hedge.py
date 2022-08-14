@@ -1,7 +1,6 @@
 # -------- libraries ---------
 import ccxt
 import time
-import pandas as pd
 import pprint
 import json
 # -------- import key & functions & alert ---------
@@ -24,17 +23,23 @@ binance = ccxt.binance(config={
     }
 })
 
+balance = binance.fetch_balance(params={"type": "future"})
 
 tickers = binance.fetch_tickers()
 invest_rate = 0.2
 coin_cnt = 5.0
 
-# ----------------- line alert -----------------------
+message_status = ""
+
 print("---------------------------------------------")
+message_status += "\n\n--------------------------------------\n"
+
 # line_alert.send_message("binance_hedge running")
 
 # ----------------- json control ---------------------
 print("---------------------------------------------")
+
+
 break_through_list = list()
 
 break_through_file_path = "/var/trading-bot/break_through_list.json"
@@ -44,6 +49,8 @@ try:
 
 except Exception as e:
     print("| Exception by First | break_through")
+
+    message_status += "| Exception by First | break_through\n"
 
 
 change_value_dict = dict()
@@ -56,6 +63,8 @@ try:
 except Exception as e:
     print("| Exception by First | change_value")
 
+    message_status += "| Exception by First | change_value\n"
+
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
@@ -66,7 +75,6 @@ time.sleep(0.1)
 # if want to execute bot, server time = set time - 9
 time_info = time.gmtime()
 hour_server = time_info.tm_hour
-hour_kst = hour_server + 9
 minute = time_info.tm_min
 
 mid_day_server = "AM"
@@ -74,22 +82,52 @@ if hour_server >= 12:
     hour_server -= 12
     mid_day_server = "PM"
 
-mid_day_kst = "AM"
+hour_kst = hour_server + 9
+
+mid_day_kst = mid_day_server
 if hour_kst >= 12:
     hour_kst -= 12
-    mid_day_kst = "PM"
+    if mid_day_server == "PM":
+        mid_day_kst = "AM"
+    else:
+        mid_day_kst = "PM"
 
 print("---------------------------------------------\n|")
-print(f"| Server time | {hour_server} {mid_day_server} : {minute}\n|")
-print(f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|")
-print("---------------------------------------------\n")
+message_status += "--------------------------------------\n"
 
+print(f"| Server time | {hour_server} {mid_day_server} : {minute}")
+print(f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|")
+message_status += f"|\n| Server time | {hour_server} {mid_day_server} : {minute}\n"
+message_status += f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|\n"
+
+print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
+message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
+
+total_money = float(balance['USDT']['total'])
+used_money = float(balance['USDT']['used'])
+free_money = float(balance['USDT']['free'])
+
+print("| Total:", total_money, "$")
+print("| Positioned:", used_money, "$")
+print("| Remainder:", free_money, "$", "\n|")
+message_status += f"| Total: {total_money} $\n"
+message_status += f"| Positioned: {used_money} $\n"
+message_status += f"| Remainder: {free_money} $\n|\n"
+
+print("---------------------------------------------\n")
+message_status += "--------------------------------------\n"
+
+# -------------------- line alert -------------------------
+try:
+    if minute == 0 and mid_day_kst == "PM" and hour_kst <= 11:
+        line_alert.send_message(message_status)
+except Exception as e:
+    print("Exception:", e)
 
 # ------------------ setting options ----------------------
 set_leverage = 3
 top_coin_list = bf.get_top_coin_list(binance, 7)
 
-balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
 try:
@@ -107,29 +145,36 @@ for ticker in tickers:
     try:
         if "/USDT" in ticker:
             target_coin_ticker = ticker
+            message_ticker = ""
 
             # break trought positioned OR top coin list
             if bf.check_coin_in_list(break_through_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
                 time.sleep(0.2)
 
                 print(f"{ticker_order}.")
+                message_ticker += f"\n\n{ticker_order}.\n"
+
                 ticker_order += 1
 
                 print("-------", "target_coin_ticker:",
                       target_coin_ticker, "-------\n|")
+                message_ticker += f"--------- {target_coin_ticker} ---------\n|\n"
 
                 target_coin_symbol = ticker.replace("/", "")
                 time.sleep(0.05)
 
-                minimum_amount = bf.get_min_amount(binance, target_coin_ticker)
+                get_min_amount = bf.get_min_amount(
+                    binance, target_coin_ticker)
+
+                minimum_amount = get_min_amount[0]
+                message_ticker += get_min_amount[1]
 
                 print("|\n| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
-                print("| minimum_amount:", minimum_amount)
+                print("| minimum_amount:", minimum_amount, "EA")
+                message_ticker += "|\n| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
+                message_ticker += f"| minimum_amount: {minimum_amount} EA\n"
 
-                print("|", balance['USDT'], "\n|")
-
-                print("| Total Money:", float(balance['USDT']['total']))
-                print("| Remain Money:", float(balance['USDT']['free']))
+                # print("|", balance['USDT'], "\n|")
 
                 leverage = 0
 
@@ -137,8 +182,6 @@ for ticker in tickers:
                     binance, target_coin_ticker)
                 max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
                     float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
-
-                print("| max_amount:", max_amount)
 
                 # first enter 2
                 # DCA 2, 4, 8, 16
@@ -148,10 +191,19 @@ for ticker in tickers:
                 buy_amount = float(binance.amount_to_precision(
                     target_coin_ticker, buy_amount))
 
+                # round
+                buy_amount = round(buy_amount, 5)
+                minimum_amount = round(minimum_amount, 5)
+                max_amount = round(max_amount, 5)
+
                 if buy_amount < minimum_amount:
                     buy_amount = minimum_amount
 
-                print("| buy_amount:", buy_amount)
+                print("| maximum_amount:", max_amount, "EA")
+                message_ticker += f"| maximum_amount: {max_amount} EA\n"
+
+                print("| buy_amount:", buy_amount, "EA\n|")
+                message_ticker += f"| buy_amount: {buy_amount} EA\n|\n"
 
                 max_DCA_amount = max_amount - buy_amount
 
@@ -267,6 +319,7 @@ for ticker in tickers:
                         if change_value < coin_price * 0.0025:
                             change_value = coin_price * 0.0025
 
+                        # high point
                         high_point_1, high_point_2 = 0, 0
                         high_value_1, high_value_2 = 0, 0
 
@@ -296,12 +349,20 @@ for ticker in tickers:
                                             # we find two point for drawing trend line
                                             break
 
+                        high_point_1 = round(high_point_1, 5)
+                        high_value_1 = round(high_value_1, 5)
+                        high_point_2 = round(high_point_2, 5)
+                        high_value_2 = round(high_value_2, 5)
+
                         print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
-                        print("| high_point_1 X:", high_point_1, "|",
-                              "high_value_1 Y:", high_value_1)
-                        print("| high_point_2 X:", high_point_2, "|",
-                              "high_value_2 Y:", high_value_2)
-                        print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                        print(
+                            f"| high_point_1 X: {high_point_1} | high_value_1 Y: {high_value_1}")
+                        print(
+                            f"| high_point_2 X: {high_point_2} | high_value_2 Y: {high_value_2}")
+
+                        message_ticker += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n"
+                        message_ticker += f"| high_point_1 X: {high_point_1}\n| high_value_1 Y: {high_value_1}\n"
+                        message_ticker += f"| high_point_2 X: {high_point_2}\n| high_value_2 Y: {high_value_2}\n"
 
                         is_long_divergence = False
 
@@ -311,6 +372,10 @@ for ticker in tickers:
                                 if high_value_1 <= 35.0 or high_value_2 <= 35.0:
                                     is_long_divergence = True
 
+                        print(f"| Long_divergence: {is_long_divergence}")
+                        message_ticker += f"| Long_divergence: {is_long_divergence}\n"
+
+                        # low point
                         low_point_1, low_point_2 = 0, 0
                         low_value_1, low_value_2 = 0, 0
 
@@ -338,10 +403,20 @@ for ticker in tickers:
                                             # we find two point for drawing trend line
                                             break
 
-                        print("| low_point_1 X:", low_point_1, "|",
-                              "low_value_1 Y:", low_value_1)
-                        print("| low_point_2 X:", low_point_2, "|",
-                              "low_value_2 Y:", low_value_2)
+                        low_point_1 = round(low_point_1, 5)
+                        low_value_1 = round(low_value_1, 5)
+                        low_point_2 = round(low_point_2, 5)
+                        low_value_2 = round(low_value_2, 5)
+
+                        print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                        print(
+                            f"| low_point_1 X: {low_point_1} | low_value_1 Y: {low_value_1}")
+                        print(
+                            f"| low_point_2 X: {low_point_2} | low_value_2 Y: {low_value_2}")
+
+                        message_ticker += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n"
+                        message_ticker += f"| low_point_1 X: {low_point_1}\n| low_value_1 Y: {low_value_1}\n"
+                        message_ticker += f"| low_point_2 X: {low_point_2}\n| low_value_2 Y: {low_value_2}\n"
 
                         is_short_divergence = False
 
@@ -350,6 +425,9 @@ for ticker in tickers:
                             if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(break_through_list) < coin_cnt:
                                 if high_value_1 >= 65.0 or high_value_2 >= 65.0:
                                     is_short_divergence = True
+
+                        print(f"| Short_divergence: {is_short_divergence}")
+                        message_ticker += f"| Short_divergence: {is_short_divergence}\n"
 
                     # -------------------- sell logic ----------------------
                         # long position chance
@@ -483,6 +561,13 @@ for ticker in tickers:
                                 params={"type": "future"})
 
                 print("--------------------------------------------\n")
+                message_ticker += "--------------------------------------\n"
+
+                try:
+                    if minute == 0 and mid_day_kst == "PM" and hour_kst <= 11:
+                        line_alert.send_message(message_ticker)
+                except Exception as e:
+                    print("Exception:", e)
 
     except Exception as e:
         print("Exception:", e)

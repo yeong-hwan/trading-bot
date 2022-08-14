@@ -30,6 +30,8 @@ def create_market_sell_order(self, symbol, amount, price, params={}):
     return self.create_order(symbol, 'limit', 'sell', amount, price, params)
 
 
+# ------------------------------------------------------------
+
 def get_RSI(ohlcv, period, standard_date):
     ohlcv["close"] = ohlcv["close"]
     delta = ohlcv["close"].diff()
@@ -497,10 +499,15 @@ def get_min_amount(binance, ticker):
     coin_info = binance.fetch_ticker(ticker)
     coin_price = coin_info['last']
 
-    print("| min_cost: ", min_cost)
-    print("| min_amount: ", min_amount)
-    print("| min_price: ", min_price, "$")
-    print("| Coin_price: ", coin_price, "$")
+    message = ""
+    print(f"| min_cost: {min_cost} $")
+    print(f"| min_amount: {min_amount} EA")
+    print(f"| min_price: {min_price} $")
+    print(f"| Coin_price: {coin_price} $")
+    message += f"| min_cost: {min_cost} $\n"
+    message += f"| min_amount: {min_amount} EA\n"
+    message += f"| min_price: {min_price} $\n"
+    message += f"| Coin_price: {coin_price} $\n"
 
     # get mininum unit price to be able to order
     if min_price < coin_price:
@@ -520,7 +527,8 @@ def get_min_amount(binance, ticker):
             min_order_cost = min_price * (num_min_amount * min_amount)
 
     minimum_amount = num_min_amount * min_amount
-    return minimum_amount
+    return_list = (minimum_amount, message)
+    return return_list
 
 
 # 현재 평가금액
