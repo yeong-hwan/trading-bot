@@ -361,20 +361,21 @@ for ticker in tickers:
                                 target_coin_ticker, buy_amount, params)
 
                             target_price = data['price'] + change_value
-                            print(bf.inance.create_limit_sell_order(
+                            print(bf.binance.create_limit_sell_order(
                                 target_coin_ticker, data['amount'], target_price, params))
 
                             total_DCA_amt = 0
                             DCA_amt = buy_amount
 
-                            print("DCA_amt:", DCA_amt)
+                            print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                            print("| DCA_amt:", DCA_amt)
 
                             i = 1
 
                             line_data = None
 
                             while total_DCA_amt + DCA_amt <= max_DCA_amount:
-                                print("-------", i, "Grid", "------")
+                                print("| -------", i, "Grid", "------")
 
                                 # DCA_amt down -> more grid
                                 DCA_amt *= 2.0
@@ -431,14 +432,15 @@ for ticker in tickers:
                             total_DCA_amt = 0
                             DCA_amt = buy_amount
 
-                            print("DCA_amt:", DCA_amt)
+                            print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                            print("| DCA_amt:", DCA_amt)
 
                             i = 1
 
                             line_data = None
 
                             while total_DCA_amt + DCA_amt <= max_DCA_amount:
-                                print("-------", i, "Grid", "------")
+                                print("| -------", i, "Grid", "------")
 
                                 # DCA_amt down -> more grid
                                 DCA_amt *= 2.0
