@@ -60,39 +60,44 @@ balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
 
-set_leverage = 3
-# -------------- time & line alert ---------------------
-#
-
+# -------------- time monitor ---------------------
 # print(time_info)
-# print(line_alert.send_message("Binance Trading Bot Working"))
 
 # if want to execute bot, server time = set time - 9
+time_info = time.gmtime()
+hour_server = time_info.tm_hour
+hour_kst = hour_server + 9
+minute = time_info.tm_min
 
+mid_day_server = "AM"
+if hour_server >= 12:
+    hour_server -= 12
+    mid_day_server = "PM"
+
+mid_day_kst = "AM"
+if hour_kst >= 12:
+    hour_kst -= 12
+    mid_day_kst = "PM"
+
+print("---------------------------------------------\n|")
+print(f"| Server time | {hour_server} {mid_day_server} : {minute}\n|")
+print(f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|")
+print("---------------------------------------------\n")
+
+
+# ------------------ setting options ----------------------
+set_leverage = 3
 top_coin_list = bf.get_top_coin_list(binance, 7)
-
-# ---- trading for except btc, eth ----
-try:
-    top_coin_list.remove("BTC/USDT")
-    top_coin_list.remove("ETH/USDT")
-except Exception as e:
-    print("Exception", e)
 
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
-time_info = time.gmtime()
-hour = time_info.tm_hour
-minute = time_info.tm_min
-mid_day = "AM"
-if hour >= 12:
-    hour -= 12
-    mid_day = "PM"
-
-
-print("---------------------------------------------\n|")
-print(f"| Server time | {hour} {mid_day} : {minute}\n|")
-print("---------------------------------------------\n")
+try:
+    # except btc, eth
+    top_coin_list.remove("BTC/USDT")
+    top_coin_list.remove("ETH/USDT")
+except Exception as e:
+    print("Exception", e)
 
 
 # ------------------- working part ------------------------
@@ -103,8 +108,8 @@ for ticker in tickers:
         if "/USDT" in ticker:
             target_coin_ticker = ticker
 
-            # top coin list OR break trought positioned
-            if bf.check_coin_in_list(top_coin_list, ticker) == True or bf.check_coin_in_list(break_through_list, ticker) == True:
+            # break trought positioned OR top coin list
+            if bf.check_coin_in_list(break_through_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
                 time.sleep(0.2)
 
                 print(f"{ticker_order}.")
@@ -165,7 +170,7 @@ for ticker in tickers:
                         isolated = position['isolated']
                         break
 
-                # lon position
+                # long position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
                         # pprint.pprint(position)
@@ -204,7 +209,7 @@ for ticker in tickers:
                         line_alert.send_message(
                             "RSI Divergence End:" + target_coin_ticker)
 
-                    # average price readjustment
+                    # readjustment average price
                     else:
                         orders = binance.fetch_orders(target_coin_ticker)
 
@@ -248,6 +253,8 @@ for ticker in tickers:
                                         print(binance.create_limit_buy_order(
                                             target_coin_ticker, abs(amt_short), target_price, params))
 
+                # -------------------- buy logic ----------------------
+                # not positioned in break through list
                 else:
                     # logic period: 5m
                     if minute & 5 == 0:
@@ -344,6 +351,7 @@ for ticker in tickers:
                                 if high_value_1 >= 65.0 or high_value_2 >= 65.0:
                                     is_short_divergence = True
 
+                    # -------------------- sell logic ----------------------
                         # long position chance
                         if is_long_divergence == True and is_short_divergence == False:
                             params = {
