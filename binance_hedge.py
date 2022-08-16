@@ -146,10 +146,12 @@ for ticker in tickers:
         if "/USDT" in ticker:
             target_coin_ticker = ticker
             message_ticker = ""
+            line_alert.send_message("line 149")
 
             # break trought positioned OR top coin list
             if bf.check_coin_in_list(break_through_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
                 time.sleep(0.2)
+                line_alert.send_message("line 154")
 
                 print(f"{ticker_order}.")
                 message_ticker += f"\n\n{ticker_order}.\n"
@@ -212,6 +214,7 @@ for ticker in tickers:
 
                 isolated = True
 
+                line_alert.send_message("line 217")
                 # short position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'SHORT':
@@ -222,6 +225,7 @@ for ticker in tickers:
                         isolated = position['isolated']
                         break
 
+                line_alert.send_message("line 228")
                 # long position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
@@ -232,6 +236,7 @@ for ticker in tickers:
                         isolated = position['isolated']
                         break
 
+                line_alert.send_message("line 239")
                 # --------- leverage & isloate setting -----------
                 if leverage != set_leverage:
                     try:
@@ -247,6 +252,7 @@ for ticker in tickers:
                     except Exception as e:
                         print("Exception:", e)
 
+                line_alert.send_message("line 255")
                 if bf.check_coin_in_list(break_through_list, ticker) == True:
                     # no position
                     if abs(amt_short) == 0 and abs(amt_long) == 0:
@@ -263,6 +269,7 @@ for ticker in tickers:
 
                     # readjustment average price
                     else:
+                        line_alert.send_message("line 273")
                         orders = binance.fetch_orders(target_coin_ticker)
 
                         if abs(amt_long) > 0:
@@ -285,10 +292,12 @@ for ticker in tickers:
                                         print(binance.create_limit_sell_order(
                                             target_coin_ticker, abs(amt_long), target_price, params))
 
+                        line_alert.send_message("line 295")
                         if abs(amt_short) > 0:
                             target_price = entry_price_short - \
                                 (change_value_dict[target_coin_ticker] * 1.0)
 
+                            line_alert.send_message("line 300")
                             for order in orders:
                                 # take profit condition
                                 if order['status'] == "open" and order['info']['positionSide'] == "SHORT" and order['side'] == "buy" and order['type'] == "limit":
@@ -308,8 +317,10 @@ for ticker in tickers:
                 # -------------------- buy logic ----------------------
                 # not positioned in break through list
                 else:
+                    line_alert.send_message("line 321")
                     # logic period: 5m
-                    if minute & 5 == 0:
+                    if minute % 1 == 0:
+                        line_alert.send_message("line 324")
                         candle_5m = bf.get_ohlcv(
                             binance, target_coin_ticker, '5m')
 
@@ -432,6 +443,8 @@ for ticker in tickers:
                     # -------------------- sell logic ----------------------
                         # long position chance
                         if is_long_divergence == True and is_short_divergence == False:
+                            line_alert.send_message("line 446")
+
                             params = {
                                 'positionSide': 'LONG'
                             }
@@ -554,7 +567,7 @@ for ticker in tickers:
                             with open(break_through_file_path, 'w') as outfile:
                                 json.dump(break_through_list, outfile)
 
-                            line_alert.gsend_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
+                            line_alert.send_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
                                 low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(lowh_value_2))
 
                             balance = binance.fetch_balance(
@@ -564,8 +577,12 @@ for ticker in tickers:
                 message_ticker += "--------------------------------------\n"
 
                 try:
-                    if minute == 0 and mid_day_kst == "PM" and hour_kst <= 11:
-                        line_alert.send_message(message_ticker)
+                    line_alert.send_message("line 580")
+                    # if minute == 0 and mid_day_kst == "PM" and hour_kst <= 11:
+                    # print(minute)
+
+                    # if mid_day_kst == "PM" and minute == 0 and hour_kst <= 11:
+                    line_alert.send_message(message_ticker)
                 except Exception as e:
                     print("Exception:", e)
 
