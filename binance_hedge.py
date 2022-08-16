@@ -162,7 +162,7 @@ for ticker in tickers:
                 message_ticker += f"--------- {target_coin_ticker} ---------\n|\n"
 
                 target_coin_symbol = ticker.replace("/", "")
-                time.sleep(0.2)
+                time.sleep(0.05)
 
                 get_min_amount = bf.get_min_amount(
                     binance, target_coin_ticker)
@@ -311,7 +311,7 @@ for ticker in tickers:
                 # not positioned in break through list
                 else:
                     # logic period: 5m
-                    if minute % 1 == 0:
+                    if minute % 5 == 0:
                         candle_5m = bf.get_ohlcv(
                             binance, target_coin_ticker, '5m')
 
