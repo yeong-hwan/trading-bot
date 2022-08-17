@@ -434,7 +434,6 @@ for ticker in tickers:
                     # -------------------- sell logic ----------------------
                         # long position chance
                         if is_long_divergence == True and is_short_divergence == False:
-                            line_alert.send_message("line 446")
 
                             params = {
                                 'positionSide': 'LONG'
