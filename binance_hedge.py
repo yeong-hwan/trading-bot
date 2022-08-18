@@ -459,6 +459,11 @@ for ticker in tickers:
                         # long position chance
                         if is_long_divergence == True and is_short_divergence == False:
 
+
+                            # should delete
+                            line_alert.send_message("long position chance")
+
+
                             params = {
                                 'positionSide': 'LONG'
                             }
@@ -524,9 +529,14 @@ for ticker in tickers:
 
                         # short position chance
                         if is_short_divergence == True and is_long_divergence == False:
+
+                            # should delete
+                            line_alert.send_message("short position chance")
+
                             params = {
                                 'positionSide': 'SHORT'
                             }
+                            
                             data = binance.create_market_sell_order(
                                 target_coin_ticker, buy_amount, params)
 
