@@ -4,15 +4,15 @@ import time
 import pprint
 import json
 # -------- import key & functions & alert ---------
-import encrypt_key
-import original_key
+# import encrypt_key
+# import original_key
 import bf
 import line_alert
 
 # ---------- key decoding ---------------
-simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
-binance_access = simple_en_decrypt.decrypt(original_key.access)
-binance_secret = simple_en_decrypt.decrypt(original_key.secret)
+# simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
+binance_access = "Zd2awwadeB2BFrxvs3tLQixrpVtkM8PfvvCVZAHeaF1RSYWckSOdUfJvwt6elXeF"
+binance_secret = "9pumuiCRihNdUTY7BO2d0sRZrBaeII7oERqNe7kDpqKoL9pVDVLQlMSsLFqZ4CGb"
 
 binance = ccxt.binance(config={
     'apiKey': binance_access,
