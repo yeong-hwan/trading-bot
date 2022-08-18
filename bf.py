@@ -11,28 +11,6 @@ standard_date
     -2: yesterday / before
 '''
 
-# --------------- ccxt substitution -------------------------
-
-
-# def create_limit_buy_order(self, symbol, amount, price, params={}):
-#     return self.create_order(symbol, 'limit', 'buy', amount, price, params)
-
-
-# def create_limit_sell_order(self, symbol, amount, price, params={}):
-#     return self.create_order(symbol, 'limit', 'sell', amount, price, params)
-
-
-# def create_market_buy_order(self, symbol, amount, price, params={}):
-#     return self.create_order(symbol, 'market', 'buy', amount, price, params)
-
-
-# def create_market_sell_order(self, symbol, amount, price, params={}):
-#     return self.create_order(symbol, 'limit', 'sell', amount, price, params)
-
-
-def create_market_sell_order(symbol, amount, price, params={}):
-    return binance.create_order(symbol, 'limit', 'sell', amount, price, params)
-
 
 # ------------------------------------------------------------
 

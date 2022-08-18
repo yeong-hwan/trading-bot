@@ -93,7 +93,6 @@ top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
 
 time.sleep(0.1)
 
-
 # -------------- time monitor ---------------------
 # print(time_info)
 
@@ -242,7 +241,6 @@ for ticker in tickers:
                 # short position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'SHORT':
-                        # pprint.pprint(position)
                         amt_short = float(position["positionAmt"])
                         entry_price_short = float(position['entryPrice'])
                         leverage = float(position['leverage'])
@@ -252,7 +250,6 @@ for ticker in tickers:
                 # long position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
-                        # pprint.pprint(position)
                         amt_long = float(position["positionAmt"])
                         entry_price_long = float(position['entryPrice'])
                         leverage = float(position['leverage'])
@@ -452,8 +449,7 @@ for ticker in tickers:
                         # valid when find two points
                         if low_point_1 != 0 and low_point_2 != 0:
                             if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(break_through_list) < coin_cnt:
-                                print("good")
-                                if low_value_1 >= 35.0 or low_value_2 >= 35.0:
+                                if low_value_1 >= 65.0 or low_value_2 >= 65.0:
                                     is_short_divergence = True
 
                         print(f"| Short_divergence: {is_short_divergence}")
@@ -585,7 +581,7 @@ for ticker in tickers:
 
                             with open(break_through_file_path, 'w') as outfile:
                                 json.dump(break_through_list, outfile)
-
+                            
                             line_alert.send_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
                                 low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(lowh_value_2))
 
