@@ -1,6 +1,10 @@
 import pandas as pd
 import time
 import pprint
+import requests
+import json
+import line_alert
+
 # ----------------- binance functions -----------------------
 
 
@@ -13,6 +17,14 @@ standard_date
 
 
 # ------------------------------------------------------------
+
+def get_usd_krw():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+    url = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD'
+    exchange = requests.get(url, headers=headers).json()
+    return exchange[0]['basePrice']
+
 
 def get_RSI(ohlcv, period, standard_date):
     ohlcv["close"] = ohlcv["close"]
@@ -188,6 +200,7 @@ def set_stop_loss(binance, ticker, cut_rate, Rest=True):
               side, abs(amt), stopPrice, params))
 
         print("------ STOPLOSS SETTING DONE ------")
+        line_alert.send_message("stop loss setting done")
 
 
 def set_stop_loss_price(binance, ticker, stop_price, Rest=True):
@@ -238,6 +251,7 @@ def set_stop_loss_price(binance, ticker, stop_price, Rest=True):
               side, abs(amt), stop_price, params))
 
         print("------ STOPLOSS SETTING DONE ------")
+        line_alert.send_message("stop loss setting done")
 
 # amount for buying
 
@@ -588,6 +602,7 @@ def set_stop_loss_long(binance, ticker, cut_rate, Rest=True):
           side, abs(amt_b), stopPrice, params))
 
     print("####STOPLOSS SETTING DONE ######################")
+    line_alert.send_message("stop loss setting done")
 
 
 def set_stop_loss_short(binance, ticker, cut_rate, Rest=True):
@@ -640,6 +655,7 @@ def set_stop_loss_short(binance, ticker, cut_rate, Rest=True):
           side, abs(amt_s), stopPrice, params))
 
     print("####STOPLOSS SETTING DONE ######################")
+    line_alert.send_message("stop loss setting done")
 
 
 def set_stop_loss_long_price(binance, ticker, stop_price, Rest=True):
@@ -687,22 +703,28 @@ def set_stop_loss_long_price(binance, ticker, stop_price, Rest=True):
           side, abs(amt_b), stop_price, params))
 
     print("####STOPLOSS SETTING DONE ######################")
+    line_alert.send_message("stop loss setting done")
 
 
 def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
+    line_alert.send_message("bf 700")
 
     if Rest == True:
         time.sleep(0.1)
     orders = binance.fetch_orders(ticker)
+
+    line_alert.send_message("bf 706")
 
     for order in orders:
 
         if order['status'] == "open" and order['type'] == 'stop_market' and order['info']['positionSide'] == "SHORT":
             binance.cancel_order(order['id'], ticker)
 
+    line_alert.send_message("bf 713")
     if Rest == True:
         time.sleep(2.0)
 
+    line_alert.send_message("bf 717")
     balance = binance.fetch_balance(params={"type": "future"})
     if Rest == True:
         time.sleep(0.1)
@@ -710,6 +732,7 @@ def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
     amt_s = 0
     entryPrice_s = 0
 
+    line_alert.send_message("bf 725")
     for posi in balance['info']['positions']:
         if posi['symbol'] == ticker.replace("/", "") and posi['positionSide'] == 'SHORT':
 
@@ -726,6 +749,7 @@ def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
         'closePosition': True
     }
 
+    line_alert.send_message("bf 742")
     print("side:", side, "   stopPrice:",
           stop_price, "   entryPrice:", entryPrice_s)
 
@@ -733,3 +757,4 @@ def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
           side, abs(amt_s), stop_price, params))
 
     print("####STOPLOSS SETTING DONE ######################")
+    line_alert.send_message("stop loss setting done")
