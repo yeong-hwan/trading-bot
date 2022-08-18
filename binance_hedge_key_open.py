@@ -27,7 +27,7 @@ balance = binance.fetch_balance(params={"type": "future"})
 
 tickers = binance.fetch_tickers()
 invest_rate = 0.2
-coin_cnt = 5.0
+coin_cnt = 1
 
 message_status = ""
 
@@ -35,6 +35,25 @@ print("---------------------------------------------")
 message_status += "\n\n--------------------------------------\n"
 
 # line_alert.send_message("binance_hedge running")
+
+# --------------- ccxt substitution -------------------------
+
+
+def create_limit_buy_order(self, symbol, amount, price, params={}):
+    return self.create_order(symbol, 'limit', 'buy', amount, price, params)
+
+
+def create_limit_sell_order(self, symbol, amount, price, params={}):
+    return self.create_order(symbol, 'limit', 'sell', amount, price, params)
+
+
+def create_market_buy_order(self, symbol, amount, price, params={}):
+    return self.create_order(symbol, 'market', 'buy', amount, price, params)
+
+
+def create_market_sell_order(self, symbol, amount, price, params={}):
+    return self.create_order(symbol, 'limit', 'sell', amount, price, params)
+
 
 # ----------------- json control ---------------------
 print("---------------------------------------------")
@@ -66,6 +85,12 @@ except Exception as e:
     message_status += "| Exception by First | change_value\n"
 
 balance = binance.fetch_balance(params={"type": "future"})
+time.sleep(0.1)
+
+# ------------------ setting options ----------------------
+set_leverage = 3
+top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
+
 time.sleep(0.1)
 
 
@@ -114,6 +139,12 @@ message_status += f"| Total: {total_money} $\n"
 message_status += f"| Positioned: {used_money} $\n"
 message_status += f"| Remainder: {free_money} $\n|\n"
 
+print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
+message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
+
+print("| Leverage:", set_leverage, "\n|")
+message_status += f"| Leverage: {set_leverage} $\n|\n"
+
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
 
@@ -124,11 +155,6 @@ try:
 except Exception as e:
     print("Exception:", e)
 
-# ------------------ setting options ----------------------
-set_leverage = 3
-top_coin_list = bf.get_top_coin_list(binance, 7)
-
-time.sleep(0.1)
 
 try:
     # except btc, eth
@@ -167,7 +193,6 @@ for ticker in tickers:
                 get_min_amount = bf.get_min_amount(
                     binance, target_coin_ticker)
 
-                print(get_min_amount)
                 minimum_amount = get_min_amount[0]
                 message_ticker += get_min_amount[1]
 
@@ -217,7 +242,7 @@ for ticker in tickers:
                 # short position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'SHORT':
-                        pprint.pprint(position)
+                        # pprint.pprint(position)
                         amt_short = float(position["positionAmt"])
                         entry_price_short = float(position['entryPrice'])
                         leverage = float(position['leverage'])
@@ -227,7 +252,7 @@ for ticker in tickers:
                 # long position
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
-                        pprint.pprint(position)
+                        # pprint.pprint(position)
                         amt_long = float(position["positionAmt"])
                         entry_price_long = float(position['entryPrice'])
                         leverage = float(position['leverage'])
@@ -249,7 +274,9 @@ for ticker in tickers:
                     except Exception as e:
                         print("Exception:", e)
 
+                # break through case
                 if bf.check_coin_in_list(break_through_list, ticker) == True:
+
                     # no position
                     if abs(amt_short) == 0 and abs(amt_long) == 0:
                         binance.cancel_all_orders(target_coin_ticker)
@@ -311,7 +338,7 @@ for ticker in tickers:
                 # not positioned in break through list
                 else:
                     # logic period: 5m
-                    if minute % 5 == 0:
+                    if minute % 1 == 0:
                         candle_5m = bf.get_ohlcv(
                             binance, target_coin_ticker, '5m')
 
@@ -327,7 +354,7 @@ for ticker in tickers:
 
                         now_rsi = bf.get_RSI(candle_5m, 14, -1)
 
-                        for idx in range(3, 20):
+                        for idx in range(3, 60):
                             left_rsi = bf.get_RSI(candle_5m, 14, -(idx-1))
                             mid_rsi = bf.get_RSI(candle_5m, 14, -(idx))
                             right_rsi = bf.get_RSI(candle_5m, 14, -(idx+1))
@@ -381,7 +408,7 @@ for ticker in tickers:
                         low_point_1, low_point_2 = 0, 0
                         low_value_1, low_value_2 = 0, 0
 
-                        for idx in range(3, 20):
+                        for idx in range(3, 60):
                             left_rsi = bf.get_RSI(candle_5m, 14, -(idx-1))
                             mid_rsi = bf.get_RSI(candle_5m, 14, -(idx))
                             right_rsi = bf.get_RSI(candle_5m, 14, -(idx+1))
@@ -425,7 +452,8 @@ for ticker in tickers:
                         # valid when find two points
                         if low_point_1 != 0 and low_point_2 != 0:
                             if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(break_through_list) < coin_cnt:
-                                if high_value_1 >= 65.0 or high_value_2 >= 65.0:
+                                print("good")
+                                if low_value_1 >= 35.0 or low_value_2 >= 35.0:
                                     is_short_divergence = True
 
                         print(f"| Short_divergence: {is_short_divergence}")
@@ -438,11 +466,11 @@ for ticker in tickers:
                             params = {
                                 'positionSide': 'LONG'
                             }
-                            data = bf.binance.create_market_buy_order(
+                            data = binance.create_market_buy_order(
                                 target_coin_ticker, buy_amount, params)
 
                             target_price = data['price'] + change_value
-                            print(bf.binance.create_limit_sell_order(
+                            print(binance.create_limit_sell_order(
                                 target_coin_ticker, data['amount'], target_price, params))
 
                             total_DCA_amt = 0
@@ -469,7 +497,7 @@ for ticker in tickers:
                                     'positionSide': 'LONG'
                                 }
 
-                                line_data = bf.binance.create_limit_buy_order(
+                                line_data = binance.create_limit_buy_order(
                                     target_coin_ticker, DCA_amt, DCA_price, params)
 
                                 total_DCA_amt += DCA_amt
@@ -500,14 +528,15 @@ for ticker in tickers:
 
                         # short position chance
                         if is_short_divergence == True and is_long_divergence == False:
+                            print("short chance")
                             params = {
                                 'positionSide': 'SHORT'
                             }
-                            data = bf.binance.create_market_sell_order(
+                            data = binance.create_market_sell_order(
                                 target_coin_ticker, buy_amount, params)
 
                             target_price = data['price'] - change_value
-                            print(bf.binance.create_limit_buy_order(
+                            print(binance.create_limit_buy_order(
                                 target_coin_ticker, data['amount'], target_price, params))
 
                             total_DCA_amt = 0
@@ -534,7 +563,7 @@ for ticker in tickers:
                                     'positionSide': 'SHORT'
                                 }
 
-                                line_data = bf.binance.create_limit_sell_order(
+                                line_data = binance.create_limit_sell_order(
                                     target_coin_ticker, DCA_amt, DCA_price, params)
 
                                 total_DCA_amt += DCA_amt
