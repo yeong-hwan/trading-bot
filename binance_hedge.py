@@ -26,10 +26,7 @@ binance = ccxt.binance(config={
 })
 
 balance = binance.fetch_balance(params={"type": "future"})
-
 tickers = binance.fetch_tickers()
-invest_rate = 0.2
-coin_cnt = 5
 
 message_status = ""
 
@@ -88,11 +85,23 @@ except Exception as e:
 balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
+#
+#
+#
+
 # ------------------ setting options ----------------------
+invest_rate = 0.2
+coin_cnt = 5
+
 set_leverage = 3
 top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
 
 time.sleep(0.1)
+# ---------------------------------------------------------
+
+#
+#
+#
 
 # -------------- time monitor ---------------------
 # print(time_info)
@@ -136,22 +145,22 @@ free_money = float(balance['USDT']['free'])
 total_usd = format(total_money_usd, ',')
 total_krw = format(total_money_krw, ',')
 
-print("| Total USD:", total_usd, "$")
-print("| Total KRW:", total_krw, "₩")
-print("| Exchange Rate:", exchange_rate, "$")
-print("| Positioned:", used_money, "$")
+print("| Total USD :", total_usd, "$")
+print("| Total KRW :", total_krw, "₩")
+print("| Exchange Rate :", exchange_rate, "$")
+print("| Positioned :", used_money, "$")
 print("| Remainder:", free_money, "$", "\n|")
-message_status += f"| Total USD: {total_usd} $\n"
-message_status += f"| Total KRW: {total_krw} ₩\n"
-message_status += f"| Exchange Rate: {exchange_rate} $\n"
-message_status += f"| Positioned: {used_money} $\n"
-message_status += f"| Remainder: {free_money} $\n|\n"
+message_status += f"| Total USD : {total_usd} $\n"
+message_status += f"| Total KRW : {total_krw} ₩\n"
+message_status += f"| Exchange Rate : {exchange_rate} $\n"
+message_status += f"| Positioned : {used_money} $\n"
+message_status += f"| Remainder : {free_money} $\n|\n"
 
 print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
 message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
 
-print("| Leverage:", set_leverage, "\n|")
-message_status += f"| Leverage: {set_leverage}\n|\n"
+print("| Leverage :", set_leverage, "\n|")
+message_status += f"| Leverage : {set_leverage}\n|\n"
 
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
@@ -190,7 +199,7 @@ for ticker in tickers:
 
                 ticker_order += 1
 
-                print("-------", "target_coin_ticker:",
+                print("-------", "target_coin_ticker :",
                       target_coin_ticker, "-------\n|")
 
                 message_ticker += f"--------- {target_coin_ticker} ---------\n|\n"
@@ -205,9 +214,9 @@ for ticker in tickers:
                 message_ticker += get_min_amount_tuple[1]
 
                 print("|\n| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
-                print("| minimum_amount:", minimum_amount, "EA")
+                print("| minimum_amount :", minimum_amount, "EA")
                 message_ticker += "|\n| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
-                message_ticker += f"| minimum_amount: {minimum_amount} EA\n"
+                message_ticker += f"| minimum_amount : {minimum_amount} EA\n"
 
                 # print("|", balance['USDT'], "\n|")
 
@@ -235,11 +244,11 @@ for ticker in tickers:
                 if buy_amount < minimum_amount:
                     buy_amount = minimum_amount
 
-                print("| maximum_amount:", max_amount, "EA")
-                message_ticker += f"| maximum_amount: {max_amount} EA\n"
+                print("| maximum_amount :", max_amount, "EA")
+                message_ticker += f"| maximum_amount : {max_amount} EA\n"
 
-                print("| buy_amount:", buy_amount, "EA\n|")
-                message_ticker += f"| buy_amount: {buy_amount} EA\n|\n"
+                print("| buy_amount :", buy_amount, "EA\n|")
+                message_ticker += f"| buy_amount : {buy_amount} EA\n|\n"
 
                 max_DCA_amount = max_amount - buy_amount
 
@@ -272,18 +281,14 @@ for ticker in tickers:
 
                 # --------- leverage & isloate setting -----------
                 if leverage != set_leverage:
-                    try:
-                        print(binance.fapiPrivate_post_leverage(
-                            {'symbol': target_coin_symbol, 'leverage': set_leverage}))
-                    except Exception as e:
-                        print("Exception:", e)
+
+                    print(binance.fapiPrivate_post_leverage(
+                        {'symbol': target_coin_symbol, 'leverage': set_leverage}))
 
                 if isolated == False:
-                    try:
-                        print(binance.fapiPrivate_post_margintype(
-                            {'symbol': target_coin_symbol, 'marginType': 'ISOLATED'}))
-                    except Exception as e:
-                        print("Exception:", e)
+
+                    print(binance.fapiPrivate_post_margintype(
+                        {'symbol': target_coin_symbol, 'marginType': 'ISOLATED'}))
 
                 # break through case
                 if bf.check_coin_in_list(break_through_list, ticker) == True:
@@ -400,13 +405,13 @@ for ticker in tickers:
 
                         print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
                         print(
-                            f"| high_point_1 X: {high_point_1} | high_value_1 Y: {high_value_1}")
+                            f"| high_point_1 X : {high_point_1} | high_value_1 Y : {high_value_1}")
                         print(
-                            f"| high_point_2 X: {high_point_2} | high_value_2 Y: {high_value_2}")
+                            f"| high_point_2 X : {high_point_2} | high_value_2 Y : {high_value_2}")
 
                         message_ticker += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n"
-                        message_ticker += f"| high_point_1 X: {high_point_1}\n| high_value_1 Y: {high_value_1}\n"
-                        message_ticker += f"| high_point_2 X: {high_point_2}\n| high_value_2 Y: {high_value_2}\n"
+                        message_ticker += f"| high_point_1 X : {high_point_1}\n| high_value_1 Y : {high_value_1}\n"
+                        message_ticker += f"| high_point_2 X : {high_point_2}\n| high_value_2 Y : {high_value_2}\n"
 
                         is_long_divergence = False
 
@@ -416,8 +421,8 @@ for ticker in tickers:
                                 if high_value_1 <= 35.0 or high_value_2 <= 35.0:
                                     is_long_divergence = True
 
-                        print(f"| Long_divergence: {is_long_divergence}")
-                        message_ticker += f"| Long_divergence: {is_long_divergence}\n"
+                        print(f"| Long_divergence : {is_long_divergence}")
+                        message_ticker += f"| Long_divergence : {is_long_divergence}\n"
 
                         # low point
                         low_point_1, low_point_2 = 0, 0
@@ -454,13 +459,13 @@ for ticker in tickers:
 
                         print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
                         print(
-                            f"| low_point_1 X: {low_point_1} | low_value_1 Y: {low_value_1}")
+                            f"| low_point_1 X : {low_point_1} | low_value_1 Y : {low_value_1}")
                         print(
-                            f"| low_point_2 X: {low_point_2} | low_value_2 Y: {low_value_2}")
+                            f"| low_point_2 X : {low_point_2} | low_value_2 Y : {low_value_2}")
 
                         message_ticker += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n"
-                        message_ticker += f"| low_point_1 X: {low_point_1}\n| low_value_1 Y: {low_value_1}\n"
-                        message_ticker += f"| low_point_2 X: {low_point_2}\n| low_value_2 Y: {low_value_2}\n"
+                        message_ticker += f"| low_point_1 X : {low_point_1}\n| low_value_1 Y : {low_value_1}\n"
+                        message_ticker += f"| low_point_2 X : {low_point_2}\n| low_value_2 Y : {low_value_2}\n"
 
                         is_short_divergence = False
 
@@ -470,11 +475,11 @@ for ticker in tickers:
                                 if low_value_1 >= 65.0 or low_value_2 >= 65.0:
                                     is_short_divergence = True
 
-                        print(f"| Short_divergence: {is_short_divergence}")
-                        message_ticker += f"| Short_divergence: {is_short_divergence}\n"
+                        print(f"| Short_divergence : {is_short_divergence}")
+                        message_ticker += f"| Short_divergence : {is_short_divergence}\n"
 
                         line_alert.send_message(
-                            f"\n\n| {target_coin_ticker}\n| Short: {is_short_divergence}\n| Long: {is_long_divergence}")
+                            f"\n\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
 #
 #
 #
@@ -502,7 +507,7 @@ for ticker in tickers:
                             DCA_amt = buy_amount
 
                             print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
-                            print("| DCA_amt:", DCA_amt)
+                            print("| DCA_amt :", DCA_amt)
 
                             i = 1
 
@@ -537,8 +542,6 @@ for ticker in tickers:
                                 i += 1
                                 time.sleep(0.1)
 
-                            line_alert.send_message("513")
-
                             stop_price = line_data['price'] - \
                                 (change_value * 2.0)
                             try:
@@ -548,28 +551,18 @@ for ticker in tickers:
                                 line_alert.send_message(
                                     "Long Exception: " + str(e))
 
-                            line_alert.send_message("524")
-
                             change_value_dict[target_coin_ticker] = change_value
-
-                            line_alert.send_message("528")
 
                             with open(change_value_file_path, 'w') as outfile:
                                 json.dump(change_value_dict, outfile)
 
-                            line_alert.send_message("533")
-
                             break_through_list.append(target_coin_ticker)
-
-                            line_alert.send_message("537")
 
                             with open(break_through_file_path, 'w') as outfile:
                                 json.dump(break_through_list, outfile)
 
-                            line_alert.send_message("542")
-
-                            line_alert.send_message("RSI Divergence Start Long : " + target_coin_ticker + " X : " + str(
-                                high_point_1) + "|" + str(high_value_1) + ", Y : " + str(high_point_2) + "|" + str(high_value_2))
+                            line_alert.send_message("\n\n| RSI Divergence Start Long : " + target_coin_ticker + " \n| X  : " + str(
+                                high_point_1) + " | " + str(high_value_1) + "\n| Y : " + str(high_point_2) + " | " + str(high_value_2))
 
                             balance = binance.fetch_balance(
                                 params={"type": "future"})
@@ -596,7 +589,7 @@ for ticker in tickers:
                             DCA_amt = buy_amount
 
                             print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
-                            print("| DCA_amt:", DCA_amt)
+                            print("| DCA_amt :", DCA_amt)
 
                             i = 1
 
@@ -644,8 +637,8 @@ for ticker in tickers:
                             with open(change_value_file_path, 'w') as outfile:
                                 json.dump(change_value_dict, outfile)
 
-                            line_alert.send_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
-                                low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(low_value_2))
+                            line_alert.send_message("\n\n| RSI Divergence Start Short : " + target_coin_ticker + " \n| X : " + str(
+                                low_point_1) + " | " + str(low_value_1) + "\n| Y : " + str(low_point_2) + " | " + str(low_value_2))
 
                             balance = binance.fetch_balance(
                                 params={"type": "future"})
@@ -660,6 +653,6 @@ for ticker in tickers:
                 #     print("Exception:", e)
 
     except Exception as e:
-        print("Exception:", e)
-        line_alert.send_message("Exception: " + str(e))
+        print("Exception :", e)
+        line_alert.send_message("Exception : " + str(e))
         line_alert.send_message(traceback.format_exc())

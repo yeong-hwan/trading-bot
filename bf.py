@@ -495,14 +495,14 @@ def get_min_amount(binance, ticker):
     coin_price = coin_info['last']
 
     message = ""
-    print(f"| min_cost: {min_cost} $")
-    print(f"| min_amount: {min_amount} EA")
-    print(f"| min_price: {min_price} $")
-    print(f"| Coin_price: {coin_price} $")
-    message += f"| min_cost: {min_cost} $\n"
-    message += f"| min_amount: {min_amount} EA\n"
-    message += f"| min_price: {min_price} $\n"
-    message += f"| Coin_price: {coin_price} $\n"
+    print(f"| min_cost : {min_cost} $")
+    print(f"| min_amount : {min_amount} EA")
+    print(f"| min_price : {min_price} $")
+    print(f"| Coin_price : {coin_price} $")
+    message += f"| min_cost : {min_cost} $\n"
+    message += f"| min_amount : {min_amount} EA\n"
+    message += f"| min_price : {min_price} $\n"
+    message += f"| Coin_price : {coin_price} $\n"
 
     # get mininum unit price to be able to order
     if min_price < coin_price:
@@ -706,24 +706,19 @@ def set_stop_loss_long_price(binance, ticker, stop_price, Rest=True):
 
 
 def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
-    line_alert.send_message("bf 700")
 
     if Rest == True:
         time.sleep(0.1)
     orders = binance.fetch_orders(ticker)
-
-    line_alert.send_message("bf 706")
 
     for order in orders:
 
         if order['status'] == "open" and order['type'] == 'stop_market' and order['info']['positionSide'] == "SHORT":
             binance.cancel_order(order['id'], ticker)
 
-    line_alert.send_message("bf 713")
     if Rest == True:
         time.sleep(2.0)
 
-    line_alert.send_message("bf 717")
     balance = binance.fetch_balance(params={"type": "future"})
     if Rest == True:
         time.sleep(0.1)
@@ -731,7 +726,6 @@ def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
     amt_s = 0
     entryPrice_s = 0
 
-    line_alert.send_message("bf 725")
     for posi in balance['info']['positions']:
         if posi['symbol'] == ticker.replace("/", "") and posi['positionSide'] == 'SHORT':
 
@@ -748,7 +742,6 @@ def set_stop_loss_short_price(binance, ticker, stop_price, Rest=True):
         'closePosition': True
     }
 
-    line_alert.send_message("bf 742")
     print("side:", side, "   stopPrice:",
           stop_price, "   entryPrice:", entryPrice_s)
 

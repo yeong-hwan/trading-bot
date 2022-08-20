@@ -116,32 +116,21 @@ free_money = float(balance['USDT']['free'])
 total_usd = format(total_money_usd, ',')
 total_krw = format(total_money_krw, ',')
 
-print("| Total USD:", total_usd, "$")
-print("| Total KRW:", total_krw, "₩")
-print("| Exchange Rate:", exchange_rate, "$")
-print("| Positioned:", used_money, "$")
-print("| Remainder:", free_money, "$", "\n|")
-message_status += f"| Total USD: {total_usd} $\n"
-message_status += f"| Total KRW: {total_krw} ₩\n"
-message_status += f"| Exchange Rate: {exchange_rate} $\n"
-message_status += f"| Positioned: {used_money} $\n"
-message_status += f"| Remainder: {free_money} $\n|\n"
+print("| Total USD :", total_usd, "$")
+print("| Total KRW :", total_krw, "₩")
+print("| Exchange Rate :", exchange_rate, "$")
+print("| Positioned :", used_money, "$")
+print("| Remainder :", free_money, "$", "\n|")
+
 
 print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
 message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
 
-print("| Leverage:", set_leverage, "\n|")
-message_status += f"| Leverage: {set_leverage}\n|\n"
+print("| Leverage :", set_leverage, "\n|")
+message_status += f"| Leverage : {set_leverage}\n|\n"
 
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
-
-# -------------------- line alert -------------------------
-try:
-    if minute == 0 and mid_day_kst == "PM" and hour_kst <= 11:
-        line_alert.send_message(message_status)
-except Exception as e:
-    print("Exception:", e)
 
 
 try:
