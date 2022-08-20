@@ -32,7 +32,6 @@ message_status = ""
 print("---------------------------------------------")
 message_status += "\n\n--------------------------------------\n"
 
-line_alert.send_message("binance_hedge running")
 # --------------- ccxt substitution -------------------------
 
 
@@ -53,9 +52,6 @@ def create_market_sell_order(self, symbol, amount, price, params={}):
 
 
 # ----------------- json control ---------------------
-print("---------------------------------------------")
-
-
 break_through_list = list()
 
 break_through_file_path = "/var/trading-bot/break_through_list.json"
@@ -182,6 +178,7 @@ except Exception as e:
 
 # ------------------- working part ------------------------
 ticker_order = 1
+message_info = ""
 
 for ticker in tickers:
     try:
@@ -257,7 +254,11 @@ for ticker in tickers:
                 isolated = True
 
                 if max_amount == 0:
-                    line_alert.send_message("pass by max_amount is zero")
+                    # line_alert.send_message(
+                    #    f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by max_amount is zero")
+                    message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by max_amount is zero"
+                    ticker_order += 1
+
                     continue
 
                 # short position
@@ -291,6 +292,11 @@ for ticker in tickers:
 
                 # break through case
                 if bf.check_coin_in_list(break_through_list, ticker) == True:
+
+                    # line_alert.send_message(
+                    #     f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by break through listed")
+
+                    message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by break through listed"
 
                     # no position
                     if abs(amt_short) == 0 and abs(amt_long) == 0:
@@ -477,8 +483,9 @@ for ticker in tickers:
                         print(f"| Short_divergence : {is_short_divergence}")
                         message_ticker += f"| Short_divergence : {is_short_divergence}\n"
 
-                        line_alert.send_message(
-                            f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
+                        # line_alert.send_message(
+                        #     f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
+                        message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| Long : {is_long_divergence}, Short : {is_short_divergence}"
 
 
 # -
@@ -545,6 +552,7 @@ for ticker in tickers:
                             bf.set_stop_loss_long_price(
                                 binance, target_coin_ticker, stop_price, False)
 
+                            # Remember change_value
                             change_value_dict[target_coin_ticker] = change_value
 
                             with open(change_value_file_path, 'w') as outfile:
@@ -639,15 +647,21 @@ for ticker in tickers:
 
                 print("--------------------------------------------\n")
                 message_ticker += "--------------------------------------\n"
+
                 ticker_order += 1
 
-                # try:
-                #     if mid_day_kst == "PM" and minute == 0 and hour_kst <= 11:
-                #         line_alert.send_message(message_ticker)
-                # except Exception as e:
-                #     print("Exception:", e)
+        # try:
+        #     if mid_day_kst == "PM" and minute == 0 and hour_kst <= 11:
+        #         line_alert.send_message(message_ticker)
+        # except Exception as e:
+        #     print("Exception:", e)
 
     except Exception as e:
         print("Exception :", e)
         line_alert.send_message("Exception : " + str(e))
         line_alert.send_message(traceback.format_exc())
+
+try:
+    line_alert.send_message(message_info)
+except Exception() as e:
+    line_alert.send_message("Exception : " + str(e))

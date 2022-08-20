@@ -36,41 +36,8 @@ message_status = ""
 print("---------------------------------------------")
 message_status += "\n\n--------------------------------------\n"
 
-# ----------------- json control ---------------------
-print("---------------------------------------------")
-
-
-break_through_list = list()
-
-break_through_file_path = "/var/trading-bot/break_through_list.json"
-try:
-    with open(break_through_file_path, 'r') as json_file:
-        break_through_list = json.load(json_file)
-
-except Exception as e:
-    print("| Exception by First | break_through")
-
-    message_status += "| Exception by First | break_through\n"
-
-
-change_value_dict = dict()
-
-change_value_file_path = "/var/trading-bot/change_value_dict.json"
-try:
-    with open(change_value_file_path, 'r') as json_file:
-        change_value_dict = json.load(json_file)
-
-except Exception as e:
-    print("| Exception by First | change_value")
-
-    message_status += "| Exception by First | change_value\n"
-
-balance = binance.fetch_balance(params={"type": "future"})
-time.sleep(0.1)
-
 # ------------------ setting options ----------------------
 set_leverage = 3
-top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
 
 time.sleep(0.1)
 
@@ -79,6 +46,7 @@ time.sleep(0.1)
 
 # if want to execute bot, server time = set time - 9
 time_info = time.gmtime()
+
 hour_server = time_info.tm_hour
 minute = time_info.tm_min
 
@@ -131,11 +99,3 @@ message_status += f"| Leverage : {set_leverage}\n|\n"
 
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
-
-
-try:
-    # except btc, eth
-    top_coin_list.remove("BTC/USDT")
-    top_coin_list.remove("ETH/USDT")
-except Exception as e:
-    print("Exception", e)
