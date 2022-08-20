@@ -352,9 +352,9 @@ for ticker in tickers:
                                         print(binance.create_limit_buy_order(
                                             target_coin_ticker, abs(amt_short), target_price, params))
 
-#
-#
-#
+# -
+# -
+# -
 
                 # -------------------- buy logic ----------------------
                 # not positioned in break through list
@@ -482,9 +482,9 @@ for ticker in tickers:
 
                         line_alert.send_message(
                             f"\n\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
-#
-#
-#
+# -
+# -
+# -
 
                     # -------------------- sell logic ----------------------
                         # long position chance
@@ -542,10 +542,9 @@ for ticker in tickers:
 
                             stop_price = line_data['price'] - \
                                 (change_value * 2.0)
-                            
+
                             bf.set_stop_loss_long_price(
                                 binance, target_coin_ticker, stop_price, False)
-                            
 
                             change_value_dict[target_coin_ticker] = change_value
 
