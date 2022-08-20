@@ -8,6 +8,8 @@ import encrypt_key
 import original_key
 import bf
 import line_alert
+import traceback
+
 
 # ---------- key decoding ---------------
 simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
@@ -126,18 +128,21 @@ message_status += f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|\n"
 print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
 message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
 
+exchange_rate = bf.get_usd_krw()
 total_money_usd = float(balance['USDT']['total'])
-total_money_krw = total_money_usd * bf.get_usd_krw()
+total_money_krw = total_money_usd * exchange_rate
 used_money = float(balance['USDT']['used'])
 free_money = float(balance['USDT']['free'])
 
 
 print("| Total USD:", total_money_usd, "$")
 print("| Total KRW:", total_money_krw, "₩")
+print("| Exchange Rate:", exchange_rate)
 print("| Positioned:", used_money, "$")
 print("| Remainder:", free_money, "$", "\n|")
 message_status += f"| Total USD: {total_money_usd} $\n"
 message_status += f"| Total KRW: {total_money_krw} ₩\n"
+message_status += f"| Exchange Rate: {exchange_rate}\n"
 message_status += f"| Positioned: {used_money} $\n"
 message_status += f"| Remainder: {free_money} $\n|\n"
 
@@ -209,9 +214,9 @@ for ticker in tickers:
 
                 coin_price = bf.get_coin_current_price(
                     binance, target_coin_ticker)
-                
+
                 max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
-                float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
+                    float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
 
                 # first enter 2
                 # DCA 2, 4, 8, 16
@@ -667,12 +672,13 @@ for ticker in tickers:
                 print("--------------------------------------------\n")
                 message_ticker += "--------------------------------------\n"
 
-                try:
-                    if mid_day_kst == "PM" and minute == 0 and hour_kst <= 11:
-                        line_alert.send_message(message_ticker)
-                except Exception as e:
-                    print("Exception:", e)
+                # try:
+                #     if mid_day_kst == "PM" and minute == 0 and hour_kst <= 11:
+                #         line_alert.send_message(message_ticker)
+                # except Exception as e:
+                #     print("Exception:", e)
 
     except Exception as e:
         print("Exception:", e)
         line_alert.send_message("Exception: " + str(e))
+        line_alert.send_message(traceback.format_exc())
