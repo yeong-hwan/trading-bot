@@ -1,4 +1,4 @@
-# -------- libraries ---------
+# -------- libraries -----------
 import ccxt
 import time
 import pprint
@@ -9,7 +9,6 @@ import original_key
 import bf
 import line_alert
 import traceback
-
 
 # ---------- key decoding ---------------
 simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
