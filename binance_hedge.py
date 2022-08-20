@@ -137,12 +137,12 @@ free_money = float(balance['USDT']['free'])
 
 print("| Total USD:", total_money_usd, "$")
 print("| Total KRW:", total_money_krw, "₩")
-print("| Exchange Rate:", exchange_rate)
+print("| Exchange Rate:", exchange_rate,"$")
 print("| Positioned:", used_money, "$")
 print("| Remainder:", free_money, "$", "\n|")
 message_status += f"| Total USD: {total_money_usd} $\n"
 message_status += f"| Total KRW: {total_money_krw} ₩\n"
-message_status += f"| Exchange Rate: {exchange_rate}\n"
+message_status += f"| Exchange Rate: {exchange_rate} $\n"
 message_status += f"| Positioned: {used_money} $\n"
 message_status += f"| Remainder: {free_money} $\n|\n"
 
