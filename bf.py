@@ -265,7 +265,6 @@ def get_amount(usdt, coin_price, rate):
     if amount < 0.001:
         amount = 0.001
 
-    #print("amout", amout)
     return amount
 
 

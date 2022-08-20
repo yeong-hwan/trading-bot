@@ -89,7 +89,7 @@ balance = binance.fetch_balance(params={"type": "future"})
 time.sleep(0.1)
 
 # ------------------ setting options ----------------------
-set_leverage = 1
+set_leverage = 3
 top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
 
 time.sleep(0.1)
@@ -133,15 +133,16 @@ total_money_usd = float(balance['USDT']['total'])
 total_money_krw = total_money_usd * exchange_rate
 used_money = float(balance['USDT']['used'])
 free_money = float(balance['USDT']['free'])
+total_usd = format(total_money_usd, ',')
+total_krw = format(total_money_krw, ',')
 
-
-print("| Total USD:", total_money_usd, "$")
-print("| Total KRW:", total_money_krw, "₩")
-print("| Exchange Rate:", exchange_rate,"$")
+print("| Total USD:", total_usd, "$")
+print("| Total KRW:", total_krw, "₩")
+print("| Exchange Rate:", exchange_rate, "$")
 print("| Positioned:", used_money, "$")
 print("| Remainder:", free_money, "$", "\n|")
-message_status += f"| Total USD: {total_money_usd} $\n"
-message_status += f"| Total KRW: {total_money_krw} ₩\n"
+message_status += f"| Total USD: {total_usd} $\n"
+message_status += f"| Total KRW: {total_krw} ₩\n"
 message_status += f"| Exchange Rate: {exchange_rate} $\n"
 message_status += f"| Positioned: {used_money} $\n"
 message_status += f"| Remainder: {free_money} $\n|\n"
@@ -197,11 +198,11 @@ for ticker in tickers:
                 target_coin_symbol = ticker.replace("/", "")
                 time.sleep(0.05)
 
-                get_min_amount = bf.get_min_amount(
+                get_min_amount_tuple = bf.get_min_amount(
                     binance, target_coin_ticker)
 
-                minimum_amount = get_min_amount[0]
-                message_ticker += get_min_amount[1]
+                minimum_amount = get_min_amount_tuple[0]
+                message_ticker += get_min_amount_tuple[1]
 
                 print("|\n| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
                 print("| minimum_amount:", minimum_amount, "EA")
@@ -246,6 +247,10 @@ for ticker in tickers:
                 entry_price_long, entry_price_short = 0, 0
 
                 isolated = True
+
+                if max_amount == 0:
+                    line_alert.send_message("pass by max_amount is zero")
+                    continue
 
                 # short position
                 for position in balance['info']['positions']:
@@ -293,8 +298,8 @@ for ticker in tickers:
                         with open(break_through_file_path, 'w') as outfile:
                             json.dump(break_through_list, outfile)
 
-                        line_alert.send_message(
-                            "RSI Divergence End:" + target_coin_ticker)
+                        # line_alert.send_message(
+                        #     "RSI Divergence End:" + target_coin_ticker)
 
                     # readjustment average price
                     else:
@@ -468,6 +473,8 @@ for ticker in tickers:
                         print(f"| Short_divergence: {is_short_divergence}")
                         message_ticker += f"| Short_divergence: {is_short_divergence}\n"
 
+                        line_alert.send_message(
+                            f"\n\n| {target_coin_ticker}\n| Short: {is_short_divergence}\n| Long: {is_long_divergence}")
 #
 #
 #
@@ -599,7 +606,6 @@ for ticker in tickers:
                                 f"{total_DCA_amt} {DCA_amt} {max_DCA_amount}")
 
                             while total_DCA_amt + DCA_amt <= max_DCA_amount:
-                                line_alert.send_message("DCA_579")
 
                                 print("| -------", i, "Grid", "------")
 
@@ -617,54 +623,29 @@ for ticker in tickers:
                                 line_data = binance.create_limit_sell_order(
                                     target_coin_ticker, DCA_amt, DCA_price, params)
 
-                                line_alert.send_message(line_data)
-
                                 total_DCA_amt += DCA_amt
 
                                 i += 1
                                 time.sleep(0.1)
 
-                            line_alert.send_message("591")
+                            stop_price = line_data['price'] + \
+                                (change_value * 2.0)
 
-                            try:
-                                stop_price = line_data['price'] + \
-                                    (change_value * 2.0)
+                            bf.set_stop_loss_short_price(
+                                binance, target_coin_ticker, stop_price, False)
 
-                                line_alert.send_message(str(stop_price))
-                            except Exception as e:
-                                line_alert.send_message(
-                                    "E: " + str(stop_price))
-
-                            try:
-                                line_alert.send_message("606")
-
-                                bf.set_stop_loss_short_price(
-                                    binance, target_coin_ticker, stop_price, False)
-                            except Exception as e:
-                                line_alert.send_message(
-                                    "Short Exception: " + str(e))
-
-                            line_alert.send_message("601")
                             break_through_list.append(target_coin_ticker)
-
-                            line_alert.send_message("614")
 
                             with open(break_through_file_path, 'w') as outfile:
                                 json.dump(break_through_list, outfile)
 
-                            line_alert.send_message("619")
-
                             change_value_dict[target_coin_ticker] = change_value
-
-                            line_alert.send_message("623")
 
                             with open(change_value_file_path, 'w') as outfile:
                                 json.dump(change_value_dict, outfile)
 
-                            line_alert.send_message("628")
-
                             line_alert.send_message("RSI Divergence Start Short : " + target_coin_ticker + " X : " + str(
-                                low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(lowh_value_2))
+                                low_point_1) + "|" + str(low_value_1) + ", Y : " + str(low_point_2) + "|" + str(low_value_2))
 
                             balance = binance.fetch_balance(
                                 params={"type": "future"})
