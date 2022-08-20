@@ -262,8 +262,11 @@ def get_amount(usdt, coin_price, rate):
 
     amount = target / coin_price
     # at least 0.001 coin for trading
+    line_alert.send_message(f"1 {amount}")
+
     if amount < 0.001:
         amount = 0.001
+    line_alert.send_message(f"2 {amount}")
 
     return amount
 

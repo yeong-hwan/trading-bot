@@ -233,8 +233,10 @@ for ticker in tickers:
                 # 1/15 enter
 
                 buy_amount = max_amount / 15.0
+                # line_alert.send_message(f"buy amt 1: {buy_amount}")
                 buy_amount = float(binance.amount_to_precision(
                     target_coin_ticker, buy_amount))
+                # line_alert.send_message(f"buy amt 2: {buy_amount}")
 
                 # round
                 buy_amount = round(buy_amount, 5)
@@ -502,7 +504,6 @@ for ticker in tickers:
                             print(binance.create_limit_sell_order(
                                 target_coin_ticker, data['amount'], target_price, params))
 
-                            line_alert.send_message("476")
                             total_DCA_amt = 0
                             DCA_amt = buy_amount
 
@@ -517,7 +518,6 @@ for ticker in tickers:
                                 f"{total_DCA_amt} {DCA_amt} {max_DCA_amount}")
 
                             while total_DCA_amt + DCA_amt <= max_DCA_amount:
-                                line_alert.send_message("DCA_491")
 
                                 print("| -------", i, "Grid", "------")
 
@@ -535,8 +535,6 @@ for ticker in tickers:
                                 line_data = binance.create_limit_buy_order(
                                     target_coin_ticker, DCA_amt, DCA_price, params)
 
-                                line_alert.send_message(line_data)
-
                                 total_DCA_amt += DCA_amt
 
                                 i += 1
@@ -544,12 +542,10 @@ for ticker in tickers:
 
                             stop_price = line_data['price'] - \
                                 (change_value * 2.0)
-                            try:
-                                bf.set_stop_loss_long_price(
-                                    binance, target_coin_ticker, stop_price, False)
-                            except Exception as e:
-                                line_alert.send_message(
-                                    "Long Exception: " + str(e))
+                            
+                            bf.set_stop_loss_long_price(
+                                binance, target_coin_ticker, stop_price, False)
+                            
 
                             change_value_dict[target_coin_ticker] = change_value
 
