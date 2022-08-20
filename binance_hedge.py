@@ -90,7 +90,7 @@ time.sleep(0.1)
 
 # ------------------ setting options ----------------------
 invest_rate = 0.2
-coin_cnt = 5
+coin_cnt = 7
 
 set_leverage = 3
 top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
@@ -195,8 +195,6 @@ for ticker in tickers:
 
                 print(f"{ticker_order}.")
                 message_ticker += f"\n\n{ticker_order}.\n"
-
-                ticker_order += 1
 
                 print("-------", "target_coin_ticker :",
                       target_coin_ticker, "-------\n|")
@@ -480,7 +478,9 @@ for ticker in tickers:
                         message_ticker += f"| Short_divergence : {is_short_divergence}\n"
 
                         line_alert.send_message(
-                            f"\n\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
+                            f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
+
+
 # -
 # -
 # -
@@ -639,6 +639,7 @@ for ticker in tickers:
 
                 print("--------------------------------------------\n")
                 message_ticker += "--------------------------------------\n"
+                ticker_order += 1
 
                 # try:
                 #     if mid_day_kst == "PM" and minute == 0 and hour_kst <= 11:
