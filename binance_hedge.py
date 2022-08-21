@@ -226,6 +226,14 @@ for ticker in tickers:
                 # DCA 2, 4, 8, 16
                 # 1/15 enter
 
+                if max_amount == 0:
+                    # line_alert.send_message(
+                    #    f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by max_amount is zero")
+                    # message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by max_amount is zero"
+                    # ticker_order += 1
+                    # continue
+                    max_amount = minimum_amount * 5
+
                 buy_amount = max_amount / 15.0
                 # line_alert.send_message(f"buy amt 1: {buy_amount}")
                 buy_amount = float(binance.amount_to_precision(
@@ -252,14 +260,6 @@ for ticker in tickers:
                 entry_price_long, entry_price_short = 0, 0
 
                 isolated = True
-
-                if max_amount == 0:
-                    # line_alert.send_message(
-                    #    f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by max_amount is zero")
-                    message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by max_amount is zero"
-                    ticker_order += 1
-
-                    continue
 
                 # short position
                 for position in balance['info']['positions']:
@@ -317,7 +317,7 @@ for ticker in tickers:
 
                         if abs(amt_long) > 0:
                             target_price = entry_price_long + \
-                                (change_value_dict[target_coin_ticker] * 1.0)
+                                (change_value_dict[target_coin_ticker] * 0.5)
 
                             for order in orders:
                                 # take profit condition
@@ -332,12 +332,14 @@ for ticker in tickers:
                                         params = {
                                             'positionSide': 'LONG'
                                         }
-                                        print(binance.create_limit_sell_order(
-                                            target_coin_ticker, abs(amt_long), target_price, params))
+                                        # print(binance.create_limit_sell_order(
+                                        #     target_coin_ticker, abs(amt_long), target_price, params))
+                                        print(bf.create_trailing_sell_order_long(
+                                            binance, target_coin_ticker, abs(amt_long), None, 1))
 
                         if abs(amt_short) > 0:
                             target_price = entry_price_short - \
-                                (change_value_dict[target_coin_ticker] * 1.0)
+                                (change_value_dict[target_coin_ticker] * 0.5)
 
                             for order in orders:
                                 # take profit condition
@@ -352,8 +354,10 @@ for ticker in tickers:
                                         params = {
                                             'positionSide': 'SHORT'
                                         }
-                                        print(binance.create_limit_buy_order(
-                                            target_coin_ticker, abs(amt_short), target_price, params))
+                                        # print(binance.create_limit_buy_order(
+                                        #     target_coin_ticker, abs(amt_short), target_price, params))
+                                        print(bf.create_trailing_buy_order_short(
+                                            binance, target_coin_ticker, abs(amt_short), None, 1))
 
 # -
 # -
@@ -368,7 +372,7 @@ for ticker in tickers:
                             binance, target_coin_ticker, '5m')
 
                         change_value = (
-                            float(candle_5m['high'][-2]) - float(candle_5m['low'][-2])) * 0.5
+                            float(candle_5m['high'][-2]) - float(candle_5m['low'][-2]))
 
                         if change_value < coin_price * 0.0025:
                             change_value = coin_price * 0.0025
@@ -505,10 +509,12 @@ for ticker in tickers:
                             data = binance.create_market_buy_order(
                                 target_coin_ticker, buy_amount, params)
 
-                            target_price = data['price'] + change_value
+                            target_price = data['price'] + change_value * 0.5
 
-                            print(binance.create_limit_sell_order(
-                                target_coin_ticker, data['amount'], target_price, params))
+                            # print(binance.create_limit_sell_order(
+                            #     target_coin_ticker, data['amount'], target_price, params))
+                            print(bf.create_trailing_sell_order_long(
+                                binance, target_coin_ticker, data['amount'], None, 1))
 
                             total_DCA_amt = 0
                             DCA_amt = buy_amount
@@ -532,7 +538,7 @@ for ticker in tickers:
 
                                 # change_value * 2.0 -> grid distance
                                 DCA_price = data['price'] - \
-                                    ((change_value * 2.0) * float(i))
+                                    ((change_value * 0.7) * float(i))
 
                                 params = {
                                     'positionSide': 'LONG'
@@ -547,7 +553,7 @@ for ticker in tickers:
                                 time.sleep(0.1)
 
                             stop_price = line_data['price'] - \
-                                (change_value * 2.0)
+                                (change_value * 1.4)
 
                             bf.set_stop_loss_long_price(
                                 binance, target_coin_ticker, stop_price, False)
@@ -582,10 +588,12 @@ for ticker in tickers:
                             data = binance.create_market_sell_order(
                                 target_coin_ticker, buy_amount, params)
 
-                            target_price = data['price'] - change_value
+                            target_price = data['price'] - change_value * 0.5
 
-                            print(binance.create_limit_buy_order(
-                                target_coin_ticker, data['amount'], target_price, params))
+                            # print(binance.create_limit_buy_order(
+                            #     target_coin_ticker, data['amount'], target_price, params))
+                            print(bf.create_trailing_buy_order_short(
+                                binance, target_coin_ticker, data['amount'], None, 1))
 
                             total_DCA_amt = 0
                             DCA_amt = buy_amount
@@ -609,7 +617,7 @@ for ticker in tickers:
 
                                 # change_value * 2.0 -> grid distance
                                 DCA_price = data['price'] + \
-                                    ((change_value * 2.0) * float(i))
+                                    ((change_value * 0.7) * float(i))
 
                                 params = {
                                     'positionSide': 'SHORT'
@@ -624,7 +632,7 @@ for ticker in tickers:
                                 time.sleep(0.1)
 
                             stop_price = line_data['price'] + \
-                                (change_value * 2.0)
+                                (change_value * 1.4)
 
                             bf.set_stop_loss_short_price(
                                 binance, target_coin_ticker, stop_price, False)
