@@ -28,53 +28,22 @@ binance = ccxt.binance(config={
 balance = binance.fetch_balance(params={"type": "future"})
 
 tickers = binance.fetch_tickers()
-invest_rate = 0.2
-coin_cnt = 5
+
 
 message_status = ""
 
-print("---------------------------------------------")
-message_status += "\n\n--------------------------------------\n"
+# print("---------------------------------------------")
+# message_status += "\n\n--------------------------------------\n"
 
 # ------------------ setting options ----------------------
 set_leverage = 3
 
 time.sleep(0.1)
+"
 
-# -------------- time monitor ---------------------
-# print(time_info)
-
-# if want to execute bot, server time = set time - 9
-time_info = time.gmtime()
-
-hour_server = time_info.tm_hour
-minute = time_info.tm_min
-
-mid_day_server = "AM"
-if hour_server >= 12:
-    hour_server -= 12
-    mid_day_server = "PM"
-
-hour_kst = hour_server + 9
-
-mid_day_kst = mid_day_server
-if hour_kst >= 12:
-    hour_kst -= 12
-    if mid_day_server == "PM":
-        mid_day_kst = "AM"
-    else:
-        mid_day_kst = "PM"
-
-print("---------------------------------------------\n|")
+print("\n---------------------------------------------\n|")
 message_status += "--------------------------------------\n"
 
-print(f"| Server time | {hour_server} {mid_day_server} : {minute}")
-print(f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|")
-message_status += f"|\n| Server time | {hour_server} {mid_day_server} : {minute}\n"
-message_status += f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|\n"
-
-print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
-message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
 
 exchange_rate = bf.get_usd_krw()
 total_money_usd = float(balance['USDT']['total'])
@@ -91,11 +60,11 @@ print("| Positioned :", used_money, "$")
 print("| Remainder :", free_money, "$", "\n|")
 
 
-print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
-message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
+# print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
+# message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
 
-print("| Leverage :", set_leverage, "\n|")
-message_status += f"| Leverage : {set_leverage}\n|\n"
+# print("| Leverage :", set_leverage, "\n|")
+# message_status += f"| Leverage : {set_leverage}\n|\n"
 
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
