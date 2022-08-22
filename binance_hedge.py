@@ -335,7 +335,7 @@ for ticker in tickers:
                                         # print(binance.create_limit_sell_order(
                                         #     target_coin_ticker, abs(amt_long), target_price, params))
                                         print(bf.create_trailing_sell_order_long(
-                                            binance, target_coin_ticker, abs(amt_long), None, 0.3))
+                                            binance, target_coin_ticker, abs(amt_long), None, 0.5))
 
                         if abs(amt_short) > 0:
                             target_price = entry_price_short - \
@@ -357,7 +357,7 @@ for ticker in tickers:
                                         # print(binance.create_limit_buy_order(
                                         #     target_coin_ticker, abs(amt_short), target_price, params))
                                         print(bf.create_trailing_buy_order_short(
-                                            binance, target_coin_ticker, abs(amt_short), None, 0.3))
+                                            binance, target_coin_ticker, abs(amt_short), None, 0.5))
 
 # -
 # -
@@ -514,7 +514,7 @@ for ticker in tickers:
                             # print(binance.create_limit_sell_order(
                             #     target_coin_ticker, data['amount'], target_price, params))
                             print(bf.create_trailing_sell_order_long(
-                                binance, target_coin_ticker, data['amount'], None, 0.3))
+                                binance, target_coin_ticker, data['amount'], None, 0.5))
 
                             total_DCA_amt = 0
                             DCA_amt = buy_amount
@@ -593,7 +593,7 @@ for ticker in tickers:
                             # print(binance.create_limit_buy_order(
                             #     target_coin_ticker, data['amount'], target_price, params))
                             print(bf.create_trailing_buy_order_short(
-                                binance, target_coin_ticker, data['amount'], None, 0.3))
+                                binance, target_coin_ticker, data['amount'], None, 0.5))
 
                             total_DCA_amt = 0
                             DCA_amt = buy_amount

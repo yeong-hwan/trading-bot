@@ -1,14 +1,12 @@
 # -------- libraries ---------
 import ccxt
 import time
-import pprint
 import json
 # -------- import key & functions & alert ---------
 import encrypt_key
 import original_key
 import bf
 import line_alert
-import traceback
 
 
 # ---------- key decoding ---------------
@@ -41,7 +39,7 @@ time.sleep(0.1)
 
 
 # if want to execute bot, server time = set time - 9
-
+time_info = time.gmtime()
 
 hour_server = time_info.tm_hour
 minute = time_info.tm_min
@@ -85,39 +83,39 @@ print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
 
 # -------------- time monitor ---------------------
-time_info = time.gmtime()
-
 year = time_info.tm_year
 month = time_info.tm_mon
 day = time_info.tm_mday
 
 
-json_info = f"\n{year}.{month}.{day}\nUSD : {total_usd} $\nKRW : {total_krw} ₩\n"
-
-profit_log_list = list()
-profit_log_file_path = "/var/trading-bot/profit_log.json"
-
 try:
-    with open(profit_log_file_path, 'r') as json_file:
-        profit_log_list = json.load(json_file)
+    json_info = f"\n{year}.{month}.{day}\nUSD : {total_usd} $\nKRW : {total_krw} ₩\n"
 
-except Exception as e:
-    print(f"Exception: {e}")
+    profit_log_list = list()
+    profit_log_file_path = "/var/trading-bot/profit_log.json"
+    # profit_log_file_path = "profit_log.json"
+
+    try:
+        with open(profit_log_file_path, 'r') as json_file:
+            profit_log_list = json.load(json_file)
+
+    except Exception as e:
+        print(f"Exception: {e}")
+
+    profit_log_list.append(json_info)
+
+    with open(profit_log_file_path, 'w') as json_file:
+        json.dump(profit_log_list, json_file)
+
+    line_profit_message = ""
+    for log in profit_log_list:
+        line_profit_message += log
+
+    line_alert.send_message(line_profit_message)
+
+    # if mid_day_kst == "PM" and minute == 0 and hour_kst == 1:
+    # line_alert.send_message(line_profit_message)
 
 
-profit_log_list.append(json_info)
-
-with open(profit_log_file_path, 'w') as json_file:
-    json.dump(profit_log_list, json_file)
-
-
-line_profit_message = ""
-for log in profit_log_list:
-    line_profit_message += log
-
-
-try:
-    if mid_day_kst == "PM" and minute == 0 and hour_kst == 1:
-        line_alert.send_message(line_profit_message)
 except Exception as e:
     line_alert.send_message(f"\n\nException: {e}")
