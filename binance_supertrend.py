@@ -9,6 +9,7 @@ import original_key
 import bf
 import line_alert
 import traceback
+import schedule
 
 
 # ---------- key decoding ---------------
@@ -29,8 +30,10 @@ balance = binance.fetch_balance(params={"type": "future"})
 
 tickers = binance.fetch_tickers()
 
+
 try:
-    schedule.every(10).seconds.do(run_bot)
+    schedule.every(5).seconds.do(bf.run_bot, binance)
+    # schedule.every(10).seconds.do(hello)
 
     while True:
         schedule.run_pending()
