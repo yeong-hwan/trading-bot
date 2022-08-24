@@ -9,6 +9,7 @@ import original_key
 import bf
 import line_alert
 import traceback
+import schedule
 
 
 # ---------- key decoding ---------------
@@ -66,5 +67,20 @@ print("| Remainder :", free_money, "$", "\n|")
 # print("| Leverage :", set_leverage, "\n|")
 # message_status += f"| Leverage : {set_leverage}\n|\n"
 
+print(bf.get_top_coin_list(binance, 5))
+
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
+
+
+try:
+    bf.run_bot()
+
+    schedule.every(10).seconds.do(run_bot)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+except Exception as e:
+    line_alert.send_message(str(e))

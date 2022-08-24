@@ -167,13 +167,12 @@ try:
 except Exception as e:
     print("Exception:", e)
 
-
-try:
-    # except btc, eth
-    top_coin_list.remove("BTC/USDT")
-    top_coin_list.remove("ETH/USDT")
-except Exception as e:
-    print("Exception", e)
+# # except btc, eth
+# try:
+#     top_coin_list.remove("BTC/USDT")
+#     top_coin_list.remove("ETH/USDT")
+# except Exception as e:
+#     print("Exception", e)
 
 
 # ------------------- working part ------------------------
@@ -371,13 +370,19 @@ for ticker in tickers:
                         candle_5m = bf.get_ohlcv(
                             binance, target_coin_ticker, '5m')
 
+                        long_point, short_point = 0, 0
+
                         change_value = (
                             float(candle_5m['high'][-2]) - float(candle_5m['low'][-2]))
 
                         if change_value < coin_price * 0.0025:
                             change_value = coin_price * 0.0025
 
-                        # high point
+                        # ----------------- RSI -----------------------
+
+#
+
+                        # RSI - long
                         high_point_1, high_point_2 = 0, 0
                         high_value_1, high_value_2 = 0, 0
 
@@ -429,11 +434,14 @@ for ticker in tickers:
                             if abs(amt_long) == 0 and candle_5m['close'][-(high_point_1)] < candle_5m['close'][-(high_point_2)] and len(break_through_list) < coin_cnt:
                                 if high_value_1 <= 35.0 or high_value_2 <= 35.0:
                                     is_long_divergence = True
+                                    long_point += 1
 
                         print(f"| Long_divergence : {is_long_divergence}")
                         message_ticker += f"| Long_divergence : {is_long_divergence}\n"
 
-                        # low point
+#
+
+                        # RSI - short
                         low_point_1, low_point_2 = 0, 0
                         low_value_1, low_value_2 = 0, 0
 
@@ -483,6 +491,7 @@ for ticker in tickers:
                             if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(break_through_list) < coin_cnt:
                                 if low_value_1 >= 65.0 or low_value_2 >= 65.0:
                                     is_short_divergence = True
+                                    short_point += 1
 
                         print(f"| Short_divergence : {is_short_divergence}")
                         message_ticker += f"| Short_divergence : {is_short_divergence}\n"
@@ -490,6 +499,25 @@ for ticker in tickers:
                         # line_alert.send_message(
                         #     f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| Short : {is_short_divergence}\n| Long : {is_long_divergence}")
                         message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| Long : {is_long_divergence}, Short : {is_short_divergence}"
+
+#
+#
+
+                        # ----------------- MACD ----------------------
+
+#
+
+                        # MACD - long
+                        macd_long_break_through = False
+
+                        for idx in range(3, 7):
+                            left_macd = bf.get_MACD(candle_5m, -(idx+1))['ocl']
+                            right_macd = bf.get_MACD(candle_5m, -(idx))['ocl']
+
+                            if left_macd < 0 < right_macd:
+                                print(idx, left_macd, right_macd)
+                                macd_long_break_through = True
+                                break
 
 
 # -
