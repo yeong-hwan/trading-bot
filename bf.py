@@ -23,7 +23,7 @@ standard_date
 
 def tr(data):
     data['previous_close'] = data['close'].shift(1)
-    data['high-low'] = abs(data['high'] - data['low'])
+    data['high-low'] = data['high'] - data['low']
     data['high-pc'] = abs(data['high'] - data['previous_close'])
     data['low-pc'] = abs(data['low'] - data['previous_close'])
 
@@ -36,10 +36,60 @@ def atr(data, period):
     data['tr'] = tr(data)
     atr = data['tr'].rolling(period).mean()
 
-    return atr
+    return atr[-1]
 
 
-def supertrend(df, period=7, atr_multiplier=3):
+def cross_over(candle_close_series, line):
+    cross_over_check = False
+
+    if (candle_close_series[-1] > line) & (candle_close_series[-2] < line):
+        cross_over_check = True
+
+    return cross_over_check
+
+
+def cross_under(candle_close_series, line):
+    cross_under_check = False
+
+    if (candle_close_series[-1] < line) & (candle_close_series[-2] > line):
+        cross_under_check = True
+
+    return cross_under_check
+
+
+def get_supertrend(candle, period, atr_multiplier, up_trend, down_trend):
+
+    hl2 = (candle['high'] + candle['low']) / 2
+
+    up_lev = hl2[-1] - (atr_multiplier * atr(candle, period))
+    dn_lev = hl2[-1] + (atr_multiplier * atr(candle, period))
+
+    print(candle['close'][-2], up_trend, up_lev)
+
+    if candle['close'][-2] > up_trend:
+        up_trend = max(up_trend, up_lev)
+    else:
+        up_trend = up_lev
+
+    if candle['close'][-2] > down_trend:
+        down_trend = min(down_trend, dn_lev)
+    else:
+        down_trend = dn_lev
+
+    if candle['close'][-2] > down_trend:
+        trend = 1
+    else:
+        if candle['close'][-2] < up_trend:
+            trend = -1
+        else:
+            trend = 1
+
+    supertrend_line = up_trend if trend == 1 else down_trend
+
+    return (supertrend_line, trend, up_trend, down_trend)
+
+
+def supertrend(df, period, atr_multiplier):
     hl2 = (df['high'] + df['low']) / 2
     df['atr'] = atr(df, period)
     df['upperband'] = hl2 + (atr_multiplier * df['atr'])
@@ -66,22 +116,24 @@ def supertrend(df, period=7, atr_multiplier=3):
     return df
 
 
-in_position = False
+# one way
+in_position = True
 
 
 def check_buy_sell_signals(binance, df):
     global in_position
 
     print("checking for buy and sell signals")
-    print(df.tail(5))
+    print("\n\n\n", df.tail(50), "\n\n\n")
 
     last_row_index = len(df.index) - 1
     previous_row_index = last_row_index - 1
 
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
         print("changed to uptrend, buy")
+        line_alert.send_message("uptrend, buy")
         if not in_position:
-            order = binance.create_market_buy_order('ETH/USD', 0.05)
+            order = binance.create_market_buy_order('ETH/USDT', 0.05)
             print(order)
             in_position = True
         else:
@@ -90,9 +142,10 @@ def check_buy_sell_signals(binance, df):
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
         if in_position:
             print("changed to downtrend, sell")
-            order = binance.create_market_sell_order('ETH/USD', 0.05)
+            line_alert.send_message("downtrend, sell")
+            order = binance.create_market_sell_order('ETH/USDT', 0.05)
             print(order)
-            in_position = False
+            in_position = True
         else:
             print("You aren't in position, nothing to sell")
 

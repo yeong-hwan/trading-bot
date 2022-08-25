@@ -1,0 +1,54 @@
+//Inputs
+CrossExit = input(false, title="Exit on complete cross of cloud only?")
+multi1 = input(title="Multiplier 1", type=input.float, step=0.1, defval=2.4, minval=1)
+period1 = input(title="Period 1", type=input.integer, step=1, defval=4, minval=1)
+multi2 = input(title="Multiplier 2", type=input.float, step=0.1, defval=4.8, minval=1)
+period2 = input(title="Period 2", type=input.integer, step=1, defval=4, minval=1)
+
+
+getSuperTrend(multi, period) =>
+    up_lev = hl2 - multi * atr(period)
+    dn_lev = hl2 + multi * atr(period)
+    up_trend = 0.0
+
+    up_trend := close[1] > up_trend[1] ? max(up_lev, up_trend[1]) : up_lev
+    
+    down_trend = 0.0
+    down_trend := close[1] < down_trend[1] ? min(dn_lev, down_trend[1]) : dn_lev
+    trend = 0
+
+    trend := close > down_trend[1] ? 1: close < up_trend[1] ? -1 : nz(trend[1], 1)
+    
+    
+
+    st_line = trend == 1 ? up_trend : down_trend
+    [st_line, trend]
+
+[st_line1, trend1] = getSuperTrend(multi1, period1)
+[st_line2, trend2] = getSuperTrend(multi2, period2)
+
+
+// Plotting
+plot1 = plot(st_line1, color = trend1 == 1 ? color.green : color.red, style = plot.style_line, linewidth = 1, title = "SuperTrend 1")
+plot2 = plot(st_line2, color = trend2 == 1 ? color.green : color.red, style = plot.style_line, linewidth = 1, title = "SuperTrend 2")
+fill(plot1, plot2, color = color.aqua, title = "Cloud")
+
+long = crossover(close, st_line1) and close > st_line2 or crossover(close, st_line2) and close > st_line1
+short = crossunder(close, st_line1) and close < st_line2 or crossunder(close, st_line2) and close < st_line1
+cloud = crossunder(close, st_line1) and close > st_line2
+    or crossover(close, st_line1) and close < st_line2
+    or crossunder(close, st_line2) and close > st_line1
+    or crossover(close, st_line2) and close < st_line1
+
+inLong = false
+inLong := long ? true : short ? false : inLong[1]
+inShort = false
+inShort := short ? true : long ? false : inShort[1]
+
+plotshape(cloud and not CrossExit, title = "Close", style = shape.xcross, location = location.abovebar, color = color.red, size=size.small, transp=0)
+
+strategy.entry("long", strategy.long, when = long and time_cond and (not inLong[1] and CrossExit or not CrossExit))
+strategy.entry("short", strategy.short, when = short and time_cond and (not inShort[1] and CrossExit or not CrossExit))
+
+strategy.close("long", when = not CrossExit and cloud)
+strategy.close("short", when = not CrossExit and cloud)
