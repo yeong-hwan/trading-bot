@@ -57,14 +57,13 @@ def cross_under(candle_close_series, line):
     return cross_under_check
 
 
+# period: length, factor: atr_multiplier
 def get_supertrend(candle, period, atr_multiplier, up_trend, down_trend):
 
     hl2 = (candle['high'] + candle['low']) / 2
 
     up_lev = hl2[-1] - (atr_multiplier * atr(candle, period))
     dn_lev = hl2[-1] + (atr_multiplier * atr(candle, period))
-
-    print(candle['close'][-2], up_trend, up_lev)
 
     if candle['close'][-2] > up_trend:
         up_trend = max(up_trend, up_lev)
@@ -89,37 +88,68 @@ def get_supertrend(candle, period, atr_multiplier, up_trend, down_trend):
     return (supertrend_line, trend, up_trend, down_trend)
 
 
-def supertrend(df, period, atr_multiplier):
-    hl2 = (df['high'] + df['low']) / 2
-    df['atr'] = atr(df, period)
-    df['upperband'] = hl2 + (atr_multiplier * df['atr'])
-    df['lowerband'] = hl2 - (atr_multiplier * df['atr'])
-    df['in_uptrend'] = True
+def get_supertrend_cloud(candle, candle_type, btc=False):
 
-    for current in range(1, len(df.index)):
-        previous = current - 1
+    candle_close_series = candle['close']
+    candle_close_current = candle_close_series[-1]
 
-        if df.loc[current, 'close'] > df.loc[previous, 'upperband']:
-            df.loc[current, 'in_uptrend'] = True
+    up_trend_1, down_trend_1 = 0, 0
+    up_trend_2, down_trend_2 = 0, 0
 
-        elif df.loc[current, 'close'] < df.loc[previous, 'lowerband']:
-            df.loc[current, 'in_uptrend'] = False
+    period_1, multi_1, period_2, multi_2 = 0, 0, 0, 0
 
-        else:
-            df.loc[current, 'in_uptrend'] = df.loc[previous, 'in_uptrend']
-            if df.loc[current, 'in_uptrend'] and df.loc[current, 'lowerband'] < df['lowerband'][previous]:
-                df.loc[current, 'lowerband'] = df.loc[previous, 'lowerband']
+    if candle_type == "5m":
+        period_1, multi_1, period_2, multi_2 = 6, 10, 10, 6
+    elif btc == True and candle_type == "4h":
+        period_1, multi_1, period_2, multi_2 = 4, 2.4, 4, 4.8
+    elif candle_type == "4h":
+        period_1, multi_1, period_2, multi_2 = 10, 3, 10, 6
 
-            if not df.loc[current, 'in_uptrend'] and df.loc[current, 'upperband'] > df.loc[previous, 'upperband']:
-                df.loc[current, 'upperband'] = df.loc[previous, 'upperband']
+    supertrend_line_1, trend_1, up_trend_1, down_trend_1 = get_supertrend(
+        candle, period_1, multi_1, up_trend_1, down_trend_1)
 
-    return df
+    supertrend_line_2, trend_2, up_trend_2, down_trend_2 = get_supertrend(
+        candle, period_2, multi_2, up_trend_2, down_trend_2)
+
+    long_condition = cross_over(candle_close_series, supertrend_line_1) \
+        and candle_close_current > supertrend_line_2 \
+        or cross_over(candle_close_series, supertrend_line_2) \
+        and candle_close_current > supertrend_line_1
+
+    short_condition = cross_under(candle_close_series, supertrend_line_1) \
+        and candle_close_current < supertrend_line_2 \
+        or cross_under(candle_close_series, supertrend_line_2) \
+        and candle_close_current < supertrend_line_1
+
+    cloud_condition = cross_under(candle_close_series, supertrend_line_1) \
+        and candle_close_current > supertrend_line_2 \
+        or cross_over(candle_close_series, supertrend_line_1) \
+        and candle_close_current < supertrend_line_2 \
+        or cross_under(candle_close_series, supertrend_line_2) \
+        and candle_close_current > supertrend_line_1 \
+        or cross_over(candle_close_series, supertrend_line_2) \
+        and candle_close_current < supertrend_line_2
+
+    # in_long, in_short = False, False
+
+    # if long_condition:
+    #     in_long = True
+    # else:
+    #     if short_condition:
+    #         in_long = False
+
+    # if short_condition:
+    #     in_short = True
+    # else:
+    #     if long_condition:
+    #         in_short = False
+
+    return long_condition, short_condition, cloud_condition
 
 
-# one way
-in_position = True
+#
 
-
+#
 def check_buy_sell_signals(binance, df):
     global in_position
 

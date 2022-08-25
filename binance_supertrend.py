@@ -3,6 +3,7 @@ import ccxt
 import time
 import pprint
 import json
+from datetime import datetime
 # -------- import key & functions & alert ---------
 import encrypt_key
 import original_key
@@ -26,81 +27,286 @@ binance = ccxt.binance(config={
     }
 })
 
-balance = binance.fetch_balance(params={"type": "future"})
+message_status = ""
 
+balance = binance.fetch_balance(params={"type": "future"})
 tickers = binance.fetch_tickers()
 
-up_trend_1, down_trend_1 = 0, 0
-up_trend_2, down_trend_2 = 0, 0
 
+# ----------------- json control ---------------------
+positioned_list = list()
 
-# ------------------ build supertrend cloud ----------------
-multi_5m_1, period_5m_1, multi_5m_2, period_5m_2 = 10, 6, 6, 10
-multi_4h_1, period_4h_1, multi_4h_2, period_4h_2 = 3, 10, 6, 10
-
-
-def run_bot(binance):
-    target_coin_ticker = "SOL/USDT"
-
-    candle = bf.get_ohlcv(
-        binance, target_coin_ticker, '5m')
-
-    candle_close_series = candle['close']
-    candle_close_current = candle_close_series[-1]
-
-    supertrend_line_1, trend_1, up_trend_1, down_trend_1 = bf.get_supertrend(
-        candle, period_5m_1, multi_5m_1, up_trend_1, down_trend_1)
-
-    supertrend_line_2, trend_2, up_trend_2, down_trend_2 = bf.get_supertrend(
-        candle, period_5m_2, multi_5m_2, up_trend_2, down_trend_2)
-
-    print("-----------------------------------------------")
-    long_condition = bf.cross_over(candle_close_series, supertrend_line_1) \
-        and candle_close_current > supertrend_line_2 \
-        or bf.cross_over(candle_close_series, supertrend_line_2) \
-        and candle_close_current > supertrend_line_1
-
-    short_condition = bf.cross_under(candle_close_series, supertrend_line_1) \
-        and candle_close_current < supertrend_line_2 \
-        or bf.cross_under(candle_close_series, supertrend_line_2) \
-        and candle_close_current < supertrend_line_1
-
-    cloud_condition = bf.cross_under(candle_close_series, supertrend_line_1) \
-        and candle_close_current > supertrend_line_2 \
-        or bf.cross_over(candle_close_series, supertrend_line_1) \
-        and candle_close_current < supertrend_line_2 \
-        or bf.cross_under(candle_close_series, supertrend_line_2) \
-        and candle_close_current > supertrend_line_1 \
-        or bf.cross_over(candle_close_series, supertrend_line_2) \
-        and candle_close_current < supertrend_line_2
-
-    print(long_condition, short_condition, cloud_condition)
-
-    in_long, in_short = False, False
-
-    if long_condition:
-        in_long = True
-    else:
-        if short_condition:
-            in_long = False
-
-    if short_condition:
-        in_short = True
-    else:
-        if long_condition:
-            in_short = False
-            
-    print(f"Long : {long_condition}\nShort : {short_condition}")
-
+positioned_file_path = "positioned_list.json"
 
 try:
-    schedule.every(5).seconds.do(run_bot, binance)
-    # schedule.every(10).seconds.do(hello)
-
-    while True:
-
-        schedule.run_pending()
-        time.sleep(1)
+    with open(positioned_file_path, 'r') as json_file:
+        positioned_list = json.load(json_file)
 
 except Exception as e:
-    line_alert.send_message(str(e))
+    print("| Exception by First | Not Positioned")
+
+    message_status += "\n| Exception by First | Not Positioned\n\n"
+
+
+#
+#
+
+# ------------------ setting options ----------------------
+invest_rate = 0.3
+coin_cnt = 5
+
+set_leverage = 3
+top_coin_list = bf.get_top_coin_list(binance, coin_cnt)
+
+time.sleep(0.1)
+# ---------------------------------------------------------
+
+#
+#
+#
+
+# -------------- time monitor ---------------------
+# print(time_info)
+
+# if want to execute bot, server time = set time - 9
+time_info = time.gmtime()
+hour_server = time_info.tm_hour
+minute = time_info.tm_min
+
+mid_day_server = "AM"
+if hour_server >= 12:
+    hour_server -= 12
+    mid_day_server = "PM"
+
+hour_kst = hour_server + 9
+
+mid_day_kst = mid_day_server
+if hour_kst >= 12:
+    hour_kst -= 12
+    if mid_day_server == "PM":
+        mid_day_kst = "AM"
+    else:
+        mid_day_kst = "PM"
+
+#
+#
+#
+
+# ------------------ supertrend cloud ----------------
+ticker_order = 1
+message_info = ""
+
+for ticker in tickers:
+    try:
+        if "/USDT" in ticker:
+            if bf.check_coin_in_list(positioned_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
+                time.sleep(0.2)
+
+                target_coin_ticker = ticker
+                message_ticker = ""
+
+                print(f"{ticker_order}.")
+                print("-------", "target_coin_ticker :",
+                      target_coin_ticker, "-------\n|")
+
+                target_coin_symbol = ticker.replace("/", "")
+                time.sleep(0.05)
+
+                get_min_amount_tuple = bf.get_min_amount(
+                    binance, target_coin_ticker)
+
+                minimum_amount = get_min_amount_tuple[0]
+                message_ticker += get_min_amount_tuple[1]
+
+                leverage = 0
+
+                coin_price = bf.get_coin_current_price(
+                    binance, target_coin_ticker)
+
+                max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
+                    float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
+
+                # adjust max_amount when 0
+                if max_amount == 0:
+                    max_amount = minimum_amount * 5
+
+                buy_amount = max_amount / 10
+
+                buy_amount = float(binance.amount_to_precision(
+                    target_coin_ticker, buy_amount))
+
+                # round amounts
+                buy_amount = round(buy_amount, 5)
+                minimum_amount = round(minimum_amount, 5)
+                max_amount = round(max_amount, 5)
+
+                if buy_amount < minimum_amount:
+                    buy_amount = minimum_amount
+
+                amt_long, amt_short = 0, 0
+                entry_price_long, entry_price_short = 0, 0
+
+                isolated = True
+
+                # short position
+                for position in balance['info']['positions']:
+                    if position['symbol'] == target_coin_symbol and position['positionSide'] == 'SHORT':
+                        amt_short = float(position["positionAmt"])
+                        entry_price_short = float(position['entryPrice'])
+                        leverage = float(position['leverage'])
+                        isolated = position['isolated']
+                        break
+
+                # long position
+                for position in balance['info']['positions']:
+                    if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
+                        amt_long = float(position["positionAmt"])
+                        entry_price_long = float(position['entryPrice'])
+                        leverage = float(position['leverage'])
+                        isolated = position['isolated']
+                        break
+
+                # --------- leverage & isloate setting -----------
+                if leverage != set_leverage:
+                    print(binance.fapiPrivate_post_leverage(
+                        {'symbol': target_coin_symbol, 'leverage': set_leverage}))
+
+                if isolated == False:
+                    print(binance.fapiPrivate_post_margintype(
+                        {'symbol': target_coin_symbol, 'marginType': 'ISOLATED'}))
+
+                # positioned case
+                if bf.check_coin_in_list(positioned_list, ticker) == True:
+
+                    # line_alert.send_message(
+                    #     f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by break through listed")
+
+                    # message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by break through listed"
+
+                    # no position
+                    if abs(amt_short) == 0 and abs(amt_long) == 0:
+                        binance.cancel_all_orders(target_coin_ticker)
+                        time.sleep(0.1)
+
+                        positioned_list.remove(target_coin_ticker)
+
+                        with open(positioned_file_path, 'w') as outfile:
+                            json.dump(positioned_list, outfile)
+
+                # not positioned
+                else:
+                    # logic period: 1m
+                    if minute & 1 == 0:
+                        # and target_coin_ticker == "BTC/USDT"
+
+                        candle_5m = bf.get_ohlcv(
+                            binance, target_coin_ticker, '5m')
+                        time.sleep(0.2)
+
+                        candle_4h = bf.get_ohlcv(
+                            binance, target_coin_ticker, '4h')
+                        time.sleep(0.2)
+
+                        # BTC test
+                        long_5m, short_5m, cloud_5m = bf.get_supertrend_cloud(
+                            candle_5m, '5m', True)
+                        long_4h, short_4h, cloud_4h = bf.get_supertrend_cloud(
+                            candle_4h, '4h', True)
+
+                        print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                        print("| 5m")
+                        print(
+                            f"| Long : {long_4h}\n| Short : {short_4h}\n| Cloud : {cloud_4h}")
+                        print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                        print("| 4h")
+                        print(
+                            f"| Long : {long_4h}\n| Short : {short_4h}\n| Cloud : {cloud_4h}")
+
+                        orders = binance.fetch_orders(target_coin_ticker)
+
+                        if long_4h:
+                            line_alert.send_message("long position chance")
+
+                            params = {
+                                'positionSide': 'LONG'
+                            }
+                            long_order = binance.create_market_buy_order(
+                                target_coin_ticker, buy_amount, params)
+
+                            time.sleep(0.1)
+
+                            positioned_list.append(target_coin_ticker)
+
+                            with open(positioned_file_path, 'w') as outfile:
+                                json.dump(positioned_list, outfile)
+
+                        elif short_4h:
+                            line_alert.send_message("short position chance")
+
+                            params = {
+                                'positionSide': 'SHORT'
+                            }
+                            short_order = binance.create_market_sell_order(
+                                target_coin_ticker, buy_amount, params)
+
+                            time.sleep(0.1)
+
+                            positioned_list.append(target_coin_ticker)
+
+                            with open(positioned_file_path, 'w') as outfile:
+                                json.dump(positioned_list, outfile)
+
+                        if cloud_4h:
+                            line_alert.send_message("close position")
+
+                            if abs(amt_long) > 0:
+                                params = {
+                                    'positionSide': 'LONG'
+                                }
+                                binance.create_market_sell_order(
+                                    target_coin_ticker, abs(amt_long), params)
+
+                            if abs(amt_short) > 0:
+                                params = {
+                                    'positionSide': 'SHORT'
+                                }
+                                binance.create_market_buy_order(
+                                    target_coin_ticker, abs(amt_short), params)
+
+                            positioned_list.remove(target_coin_ticker)
+
+                            with open(positioned_file_path, 'w') as outfile:
+                                json.dump(positioned_list, outfile)
+
+                print("--------------------------------------------\n\n")
+                message_ticker += "--------------------------------------\n"
+
+                ticker_order += 1
+
+    except Exception as e:
+        print("Exception :", e)
+        line_alert.send_message("Exception : " + str(e))
+        line_alert.send_message(traceback.format_exc())
+
+
+# def run_bot(binance):
+#     print(f"\n\nFetching new bars for {datetime.now().isoformat()}")
+
+#     long_condition, short_condition, cloud_condition = bf.get_supertrend_cloud(
+#         candle, '5m')
+
+#     print(
+#         f"Long : {long_condition}\nShort : {short_condition}\nCloud : {cloud_condition}")
+
+
+# try:
+#     schedule.every(10).seconds.do(run_bot, binance)
+#     # schedule.every(10).seconds.do(hello)
+
+#     while True:
+
+#         schedule.run_pending()
+#         time.sleep(1)
+
+# except Exception as e:
+#     line_alert.send_message(str(e))

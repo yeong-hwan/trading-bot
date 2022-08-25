@@ -52,17 +52,17 @@ def create_market_sell_order(self, symbol, amount, price, params={}):
 
 
 # ----------------- json control ---------------------
-break_through_list = list()
+positioned_list = list()
 
-break_through_file_path = "/var/trading-bot/break_through_list.json"
+positioned_file_path = "/var/trading-bot/positioned_list.json"
 try:
-    with open(break_through_file_path, 'r') as json_file:
-        break_through_list = json.load(json_file)
+    with open(positioned_file_path, 'r') as json_file:
+        positioned_list = json.load(json_file)
 
 except Exception as e:
-    print("| Exception by First | break_through")
+    print("| Exception by First | Not Positioned")
 
-    message_status += "| Exception by First | break_through\n"
+    message_status += "| Exception by First | Not Positioned\n"
 
 
 change_value_dict = dict()
@@ -86,10 +86,10 @@ time.sleep(0.1)
 
 # ------------------ setting options ----------------------
 invest_rate = 0.3
-coin_cnt = 7
+coin_cnt = 5
 
 set_leverage = 3
-top_coin_list = bf.get_top_coin_list(binance, coin_cnt+2)
+top_coin_list = bf.get_top_coin_list(binance, coin_cnt)
 
 time.sleep(0.1)
 # ---------------------------------------------------------
@@ -186,7 +186,7 @@ for ticker in tickers:
             message_ticker = ""
 
             # break trought positioned OR top coin list
-            if bf.check_coin_in_list(break_through_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
+            if bf.check_coin_in_list(positioned_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
                 time.sleep(0.2)
 
                 print(f"{ticker_order}.")
@@ -290,7 +290,7 @@ for ticker in tickers:
                         {'symbol': target_coin_symbol, 'marginType': 'ISOLATED'}))
 
                 # break through case
-                if bf.check_coin_in_list(break_through_list, ticker) == True:
+                if bf.check_coin_in_list(positioned_list, ticker) == True:
 
                     # line_alert.send_message(
                     #     f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by break through listed")
@@ -302,10 +302,10 @@ for ticker in tickers:
                         binance.cancel_all_orders(target_coin_ticker)
                         time.sleep(0.1)
 
-                        break_through_list.remove(target_coin_ticker)
+                        positioned_list.remove(target_coin_ticker)
 
-                        with open(break_through_file_path, 'w') as outfile:
-                            json.dump(break_through_list, outfile)
+                        with open(positioned_file_path, 'w') as outfile:
+                            json.dump(positioned_list, outfile)
 
                         # line_alert.send_message(
                         #     "RSI Divergence End:" + target_coin_ticker)
@@ -431,7 +431,7 @@ for ticker in tickers:
 
                         # valid when find two points
                         if high_point_1 != 0 and high_point_2 != 0:
-                            if abs(amt_long) == 0 and candle_5m['close'][-(high_point_1)] < candle_5m['close'][-(high_point_2)] and len(break_through_list) < coin_cnt:
+                            if abs(amt_long) == 0 and candle_5m['close'][-(high_point_1)] < candle_5m['close'][-(high_point_2)] and len(positioned_list) < coin_cnt:
                                 if high_value_1 <= 35.0 or high_value_2 <= 35.0:
                                     is_long_divergence = True
                                     long_point += 1
@@ -488,7 +488,7 @@ for ticker in tickers:
 
                         # valid when find two points
                         if low_point_1 != 0 and low_point_2 != 0:
-                            if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(break_through_list) < coin_cnt:
+                            if abs(amt_long) == 0 and candle_5m['close'][-(low_point_1)] < candle_5m['close'][-(low_point_2)] and len(positioned_list) < coin_cnt:
                                 if low_value_1 >= 65.0 or low_value_2 >= 65.0:
                                     is_short_divergence = True
                                     short_point += 1
@@ -592,10 +592,10 @@ for ticker in tickers:
                             with open(change_value_file_path, 'w') as outfile:
                                 json.dump(change_value_dict, outfile)
 
-                            break_through_list.append(target_coin_ticker)
+                            positioned_list.append(target_coin_ticker)
 
-                            with open(break_through_file_path, 'w') as outfile:
-                                json.dump(break_through_list, outfile)
+                            with open(positioned_file_path, 'w') as outfile:
+                                json.dump(positioned_list, outfile)
 
                             line_alert.send_message("\n\n| RSI Divergence Start Long : " + target_coin_ticker + " \n| X  : " + str(
                                 high_point_1) + " | " + str(high_value_1) + "\n| Y : " + str(high_point_2) + " | " + str(high_value_2))
@@ -665,10 +665,10 @@ for ticker in tickers:
                             bf.set_stop_loss_short_price(
                                 binance, target_coin_ticker, stop_price, False)
 
-                            break_through_list.append(target_coin_ticker)
+                            positioned_list.append(target_coin_ticker)
 
-                            with open(break_through_file_path, 'w') as outfile:
-                                json.dump(break_through_list, outfile)
+                            with open(positioned_file_path, 'w') as outfile:
+                                json.dump(positioned_list, outfile)
 
                             change_value_dict[target_coin_ticker] = change_value
 
