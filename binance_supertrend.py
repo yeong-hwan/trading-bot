@@ -52,57 +52,57 @@ except Exception as e:
 
     message_status += "\n| Exception by First | Not Positioned\n\n"
 
+try:
+    #
+    #
 
-#
-#
+    # ------------------ setting options ----------------------
+    invest_rate = 0.3
+    coin_cnt = 5
 
-# ------------------ setting options ----------------------
-invest_rate = 0.3
-coin_cnt = 5
+    set_leverage = 3
+    top_coin_list = bf.get_top_coin_list(binance, coin_cnt)
 
-set_leverage = 3
-top_coin_list = bf.get_top_coin_list(binance, coin_cnt)
+    time.sleep(0.1)
+    # ---------------------------------------------------------
 
-time.sleep(0.1)
-# ---------------------------------------------------------
+    #
+    #
+    #
 
-#
-#
-#
+    # -------------- time monitor ---------------------
+    # print(time_info)
 
-# -------------- time monitor ---------------------
-# print(time_info)
+    # if want to execute bot, server time = set time - 9
+    time_info = time.gmtime()
+    hour_server = time_info.tm_hour
+    minute = time_info.tm_min
 
-# if want to execute bot, server time = set time - 9
-time_info = time.gmtime()
-hour_server = time_info.tm_hour
-minute = time_info.tm_min
+    mid_day_server = "AM"
+    if hour_server >= 12:
+        hour_server -= 12
+        mid_day_server = "PM"
 
-mid_day_server = "AM"
-if hour_server >= 12:
-    hour_server -= 12
-    mid_day_server = "PM"
+    hour_kst = hour_server + 9
 
-hour_kst = hour_server + 9
+    mid_day_kst = mid_day_server
+    if hour_kst >= 12:
+        hour_kst -= 12
+        if mid_day_server == "PM":
+            mid_day_kst = "AM"
+        else:
+            mid_day_kst = "PM"
 
-mid_day_kst = mid_day_server
-if hour_kst >= 12:
-    hour_kst -= 12
-    if mid_day_server == "PM":
-        mid_day_kst = "AM"
-    else:
-        mid_day_kst = "PM"
+    #
+    #
+    #
 
-#
-#
-#
+    # ------------------ supertrend cloud ----------------
+    ticker_order = 1
+    message_info = ""
 
-# ------------------ supertrend cloud ----------------
-ticker_order = 1
-message_info = ""
+    for ticker in tickers:
 
-for ticker in tickers:
-    try:
         if "/USDT" in ticker:
             if bf.check_coin_in_list(positioned_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
                 time.sleep(0.2)
@@ -235,11 +235,9 @@ for ticker in tickers:
                             long_4h, short_4h, cloud_4h = bf.get_supertrend_cloud(
                                 candle_4h, '4h')
 
+    # ---------------------------------------------------------
 
-# ---------------------------------------------------------
-
-
-# ---------------------------------------------------------
+    # ---------------------------------------------------------
 
                         print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
                         print("| 5m")
@@ -250,12 +248,9 @@ for ticker in tickers:
                         print(
                             f"| Long : {long_4h}\n| Short : {short_4h}\n| Cloud : {cloud_4h}")
 
-                        orders = binance.fetch_orders(target_coin_ticker)
+                        orders = binance.fetch_orders(ticker)
 
-                        line_alert.send_message(str(long_5m))
-
-
-# ----------------------- enter position -----------------------
+    # ----------------------- enter position -----------------------
 
                         # 5m
                         if long_5m:
@@ -339,7 +334,7 @@ for ticker in tickers:
                             with open(positioned_file_path, 'w') as outfile:
                                 json.dump(positioned_list, outfile)
 
-# -----------------------------------------------------------------
+    # -----------------------------------------------------------------
                         ticker_name = 0
                         candle_period = ""
 
@@ -370,14 +365,13 @@ for ticker in tickers:
                                 positioned_amt_4h = buy_amt_data
                                 positioned_coin_price_5m = coin_price_data
 
+    # -----------------------------------------------------------------
 
-# -----------------------------------------------------------------
+    #
+    #
+    #
 
-#
-#
-#
-
-# -----------------------  exit position -----------------------
+    # -----------------------  exit position -----------------------
                             # 5m
                             if cloud_5m:
                                 line_alert.send_message(
@@ -431,10 +425,10 @@ for ticker in tickers:
 
                 ticker_order += 1
 
-    except Exception as e:
-        print("Exception :", e)
-        line_alert.send_message("Exception : " + str(e))
-        line_alert.send_message(traceback.format_exc())
+except Exception as e:
+    print("Exception :", e)
+    line_alert.send_message("Exception : " + str(e))
+    line_alert.send_message(traceback.format_exc())
 
 
 # def run_bot(binance):
