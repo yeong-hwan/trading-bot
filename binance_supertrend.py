@@ -335,13 +335,14 @@ try:
                                 json.dump(positioned_list, outfile)
 
     # -----------------------------------------------------------------
-                        ticker_name = 0
-                        candle_period = ""
+                        ticker_name = ""
 
+                        candle_period_5m = ""
                         position_side_5m = ""
                         positioned_amt_5m = 0
                         positioned_coin_price_5m = 0
 
+                        candle_period_4h = ""
                         position_side_4h = ""
                         positioned_amt_4h = 0
                         positioned_coin_price_4h = 0
@@ -354,13 +355,13 @@ try:
                             coin_price_data = position_data[4]
 
                             if ticker_name == ticker and candle_data == "5m":
-                                candle_period = candle_data
+                                candle_period_5m = candle_data
                                 position_side_5m = position_side_data
                                 positioned_amt_5m = buy_amt_data
                                 positioned_coin_price_5m = coin_price_data
 
                             if ticker_name == ticker and candle_data == "4h":
-                                candle_period = candle_data
+                                candle_period_4h = candle_data
                                 position_side_4h = position_side_data
                                 positioned_amt_4h = buy_amt_data
                                 positioned_coin_price_5m = coin_price_data
