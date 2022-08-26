@@ -680,7 +680,7 @@ def get_min_amount(binance, ticker):
 
     message = ""
     print(f"| min_cost : {min_cost} $")
-    print(f"| min_amount : {min_amount} EA")
+    # print(f"| min_amount : {min_amount} EA")
     print(f"| min_price : {min_price} $")
     print(f"| Coin_price : {coin_price} $")
     message += f"| min_cost : {min_cost} $\n"
