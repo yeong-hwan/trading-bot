@@ -29,6 +29,8 @@ binance = ccxt.binance(config={
 
 message_status = ""
 
+
+# binance.verbose = True
 balance = binance.fetch_balance(params={"type": "future"})
 tickers = binance.fetch_tickers()
 
@@ -105,7 +107,7 @@ try:
 
         if "/USDT" in ticker:
             if bf.check_coin_in_list(positioned_list, ticker) == True or bf.check_coin_in_list(top_coin_list, ticker) == True:
-                time.sleep(0.2)
+                time.sleep(0.3)
 
                 target_coin_ticker = ticker
                 message_ticker = ""
@@ -180,12 +182,17 @@ try:
                     print(binance.fapiPrivate_post_leverage(
                         {'symbol': target_coin_symbol, 'leverage': set_leverage}))
 
+                    time.sleep(0.1)
+
                 if isolated == False:
                     print(binance.fapiPrivate_post_margintype(
                         {'symbol': target_coin_symbol, 'marginType': 'ISOLATED'}))
 
+                    time.sleep(0.1)
+
                 # positioned case
                 if bf.check_coin_in_list(positioned_list, ticker) == True:
+                    time.sleep(0.1)
 
                     line_alert.send_message(
                         f"\n\n{ticker_order}.\n| {ticker}\n| pass by positioned")
@@ -209,7 +216,8 @@ try:
                     # not positioned
                 else:
                     # logic period: 1m
-                    if minute & 1 == 0:
+                    # if minute & 1 == 0:
+                    if True:
                         long_5m, short_5m, cloud_5m = False, False, False
                         long_4h, short_4h, cloud_4h = False, False, False
 
@@ -257,6 +265,8 @@ try:
                             line_alert.send_message(
                                 f"{target_coin_ticker} 5m long position chance")
 
+                            time.sleep(0.1)
+
                             params = {
                                 'positionSide': 'LONG'
                             }
@@ -276,6 +286,8 @@ try:
                         elif short_5m:
                             line_alert.send_message(
                                 f"{target_coin_ticker} 5m short position chance")
+
+                            time.sleep(0.1)
 
                             params = {
                                 'positionSide': 'SHORT'
