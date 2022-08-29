@@ -18,8 +18,21 @@ standard_date
     -2: yesterday / before
 '''
 
+# # ---------------------- deque for trend -----------------------
+# trend_deque = deque()
+# trend_deque_path = "/var/trading-bot/trend_deque.json"
+
+
+# try:
+#     with open(trend_deque_path, 'r') as json_file:
+#         trend_deque = json.load(json_file)
+
+# except Exception as e:
+#     print("| Exception by First | No trend")
+
 
 # ----------------------- trendline ----------------------------
+
 
 def tr(data):
     data['previous_close'] = data['close'].shift(1)
@@ -58,57 +71,65 @@ def cross_under(candle_close_series, line):
 
 
 # period: length, factor: atr_multiplier
-def get_supertrend(candle, period, atr_multiplier, up_trend, down_trend):
+def get_supertrend(candle, period, atr_multiplier, up_trend_line, down_trend_line):
 
-    hl2 = (candle['high'] + candle['low']) / 2
+    hl2 = (candle['high'][-2] + candle['low'][-2]) / 2
 
-    up_lev = hl2[-1] - (atr_multiplier * atr(candle, period))
-    dn_lev = hl2[-1] + (atr_multiplier * atr(candle, period))
+    candle_close = candle['close'][-2]
 
-    if candle['close'][-2] > up_trend:
-        up_trend = max(up_trend, up_lev)
+    high_band = round(hl2 + (atr_multiplier * atr(candle, period)), 5)
+    low_band = round(hl2 - (atr_multiplier * atr(candle, period)), 5)
+
+    if candle_close < up_trend_line:
+        up_trend_line = min(up_trend_line, high_band)
     else:
-        up_trend = up_lev
+        up_trend_line = high_band
 
-    if candle['close'][-2] > down_trend:
-        down_trend = min(down_trend, dn_lev)
+    if candle_close > down_trend_line:
+        down_trend_line = max(down_trend_line, low_band)
     else:
-        down_trend = dn_lev
+        down_trend_line = low_band
 
-    if candle['close'][-2] > down_trend:
+    if candle_close > up_trend_line:
         trend = 1
     else:
-        if candle['close'][-2] < up_trend:
+        if candle_close < down_trend_line:
             trend = -1
         else:
             trend = 1
 
-    supertrend_line = up_trend if trend == 1 else down_trend
+    low_trend_line = round(down_trend_line, 5)
+    donw_trend = round(up_trend_line, 5)
 
-    return (supertrend_line, trend, up_trend, down_trend)
+    supertrend_line = low_trend_line if trend == 1 else up_trend_line
+
+    # print("------------\n", supertrend_line,
+    #       candle_close, low_trend_line, up_trend_line, "\n")
+
+    return supertrend_line, up_trend_line, low_trend_line
 
 
-def get_supertrend_cloud(candle, candle_type, btc=False):
+def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend_2, down_trend_2, btc=False):
 
     candle_close_series = candle['close']
     candle_close_current = candle_close_series[-1]
 
-    up_trend_1, down_trend_1 = 0, 0
-    up_trend_2, down_trend_2 = 0, 0
-
     period_1, multi_1, period_2, multi_2 = 0, 0, 0, 0
 
+    # ---------------- variables setting --------------------
     if candle_type == "5m":
         period_1, multi_1, period_2, multi_2 = 6, 10, 10, 6
+
     elif btc == True and candle_type == "4h":
         period_1, multi_1, period_2, multi_2 = 4, 2.4, 4, 4.8
+
     elif candle_type == "4h":
         period_1, multi_1, period_2, multi_2 = 10, 3, 10, 6
 
-    supertrend_line_1, trend_1, up_trend_1, down_trend_1 = get_supertrend(
+    supertrend_line_1, up_trend_line_1, down_trend_line_1 = get_supertrend(
         candle, period_1, multi_1, up_trend_1, down_trend_1)
 
-    supertrend_line_2, trend_2, up_trend_2, down_trend_2 = get_supertrend(
+    supertrend_line_2, up_trend_line_2, down_trend_line_2 = get_supertrend(
         candle, period_2, multi_2, up_trend_2, down_trend_2)
 
     long_condition = cross_over(candle_close_series, supertrend_line_1) \
@@ -144,7 +165,7 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     #     if long_condition:
     #         in_short = False
 
-    return long_condition, short_condition, cloud_condition
+    return long_condition, short_condition, cloud_condition, [up_trend_line_1, down_trend_line_1, up_trend_line_2, down_trend_line_2]
 
 
 #
