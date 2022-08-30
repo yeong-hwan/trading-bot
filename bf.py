@@ -6,6 +6,7 @@ import json
 import line_alert
 import numpy as np
 from datetime import datetime
+import ta
 
 pd.set_option('display.max_rows', None)
 # ----------------- binance functions -----------------------
@@ -34,22 +35,22 @@ standard_date
 # ----------------------- trendline ----------------------------
 
 
-def tr(data):
-    data['previous_close'] = data['close'].shift(1)
-    data['high-low'] = data['high'] - data['low']
-    data['high-pc'] = abs(data['high'] - data['previous_close'])
-    data['low-pc'] = abs(data['low'] - data['previous_close'])
+# def tr(data):
+#     data['previous_close'] = data['close'].shift(1)
+#     data['high-low'] = data['high'] - data['low']
+#     data['high-pc'] = abs(data['high'] - data['previous_close'])
+#     data['low-pc'] = abs(data['low'] - data['previous_close'])
 
-    tr = data[['high-low', 'high-pc', 'low-pc']].max(axis=1)
+#     tr = data[['high-low', 'high-pc', 'low-pc']].max(axis=1)
 
-    return tr
+#     return tr
 
 
-def atr(data, period):
-    data['tr'] = tr(data)
-    atr = data['tr'].rolling(period).mean()
+# def atr(data, period):
+#     data['tr'] = tr(data)
+#     atr = data['tr'].rolling(period).mean()
 
-    return atr[-1]
+#     return atr[-1]
 
 
 def cross_over(candle_close_series, line):
@@ -77,32 +78,63 @@ def get_supertrend(candle, period, atr_multiplier, up_trend_line, down_trend_lin
 
     candle_close = candle['close'][-2]
 
-    high_band = round(hl2 + (atr_multiplier * atr(candle, period)), 5)
-    low_band = round(hl2 - (atr_multiplier * atr(candle, period)), 5)
+    H = candle['high']
+    L = candle['low']
+    C = candle['close']
 
-    if candle_close < up_trend_line:
-        up_trend_line = min(up_trend_line, high_band)
+    atr = ta.volatility.average_true_range(H, L, C, 10)[-1]
+
+    high_band = round(hl2 + (atr_multiplier * atr), 5)
+    low_band = round(hl2 - (atr_multiplier * atr), 5)
+
+    up_trend_line = round(up_trend_line, 5)
+    down_trend_line = round(down_trend_line, 5)
+
+    line_alert.send_message(f"\n\natr: {atr}\nhb: {high_band}\nlb: {low_band}")
+
+    if candle_close > up_trend_line:
+        up_trend_line = max(up_trend_line, high_band)
     else:
         up_trend_line = high_band
 
-    if candle_close > down_trend_line:
-        down_trend_line = max(down_trend_line, low_band)
+    if candle_close < down_trend_line:
+        down_trend_line = min(down_trend_line, low_band)
     else:
         down_trend_line = low_band
 
-    if candle_close > up_trend_line:
+    trend = 1
+
+    if candle_close > down_trend_line:
         trend = 1
     else:
-        if candle_close < down_trend_line:
+        if candle_close < up_trend_line:
             trend = -1
         else:
             trend = 1
 
-    down_trend_line = round(down_trend_line, 5)
-    up_trend_line = round(up_trend_line, 5)
+    supertrend_line = up_trend_line if trend == 1 else down_trend_line
 
-    supertrend_line = down_trend_line if trend == 1 else up_trend_line
+    """
+    up_lev(low_band) = hl2 - multi * atr(period)
+    dn_lev(high_band) = hl2 + multi * atr(period)
+    up_trend = 0.0
+    up_trend :=
+        if close[1] > up_trend[1]:
+            max(up_lev, up_trend[1])
+        else:
+            up_lev
+    down_trend = 0.0
+    down_trend :=
+        if close[1] < down_trend[1]:
+            min(dn_lev, down_trend[1])
+        else:
+            dn_lev
+    trend = 0
+    trend := close > down_trend[1] ? 1: close < up_trend[1] ? -1 : nz(trend[1], 1)
+    st_line = trend == 1 ? up_trend : down_trend
+    [st_line, trend]
 
+    """
     # print("------------\n", supertrend_line,
     #       candle_close, low_trend_line, up_trend_line, "\n")
 
@@ -132,24 +164,32 @@ def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend
     supertrend_line_2, up_trend_line_2, down_trend_line_2 = get_supertrend(
         candle, period_2, multi_2, up_trend_2, down_trend_2)
 
-    long_condition = cross_over(candle_close_series, supertrend_line_1) \
-        and candle_close_current > supertrend_line_2 \
-        or cross_over(candle_close_series, supertrend_line_2) \
-        and candle_close_current > supertrend_line_1
+    long_condition = (cross_over(candle_close_series, supertrend_line_1)
+                      and candle_close_current > supertrend_line_2) \
+        or (cross_over(candle_close_series, supertrend_line_2)
+            and candle_close_current > supertrend_line_1)
 
-    short_condition = cross_under(candle_close_series, supertrend_line_1) \
-        and candle_close_current < supertrend_line_2 \
-        or cross_under(candle_close_series, supertrend_line_2) \
-        and candle_close_current < supertrend_line_1
+    short_condition = (cross_under(candle_close_series, supertrend_line_1)
+                       and candle_close_current < supertrend_line_2) \
+        or (cross_under(candle_close_series, supertrend_line_2)
+            and candle_close_current < supertrend_line_1)
 
-    cloud_condition = cross_under(candle_close_series, supertrend_line_1) \
-        and candle_close_current > supertrend_line_2 \
-        or cross_over(candle_close_series, supertrend_line_1) \
-        and candle_close_current < supertrend_line_2 \
-        or cross_under(candle_close_series, supertrend_line_2) \
-        and candle_close_current > supertrend_line_1 \
-        or cross_over(candle_close_series, supertrend_line_2) \
-        and candle_close_current < supertrend_line_1
+    if candle_type == "4h":
+        candle_prev = candle_close_series[-2]
+        # line_alert.send_message(
+        #     f"\n candle_prev st_1 {candle_prev} {supertrend_line_1}\n candle_now < st_1 {candle_close_current} < {supertrend_line_1}\n candle_now > st_2 {candle_close_current} > {supertrend_line_2}")
+
+        line_alert.send_message(
+            f"\nclose {candle_close_current}\nst_1 {supertrend_line_1}\nut_1 {up_trend_line_1}\ndt_1 {down_trend_line_1} \n\nst_2 {supertrend_line_2}\nut_2 {up_trend_line_2}\ndt_2 {down_trend_line_2}")
+
+    cloud_condition = (cross_under(candle_close_series, supertrend_line_1)
+                       and candle_close_current > supertrend_line_2) \
+        or (cross_over(candle_close_series, supertrend_line_1)
+            and candle_close_current < supertrend_line_2) \
+        or (cross_under(candle_close_series, supertrend_line_2)
+            and candle_close_current > supertrend_line_1) \
+        or (cross_over(candle_close_series, supertrend_line_2)
+            and candle_close_current < supertrend_line_1)
 
     # in_long, in_short = False, False
 

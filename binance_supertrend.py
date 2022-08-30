@@ -174,16 +174,21 @@ try:
 
             # get supertrend cloud
             if ticker == "BTC/USDT":
+                continue
                 long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
                     candle_5m, '5m', up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2, True)
                 long_4h, short_4h, cloud_4h, trend_4h = bf.get_supertrend_cloud(
                     candle_4h, '4h', up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2, True)
 
             else:
-                long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
-                    candle_5m, '5m', up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2)
-                long_4h, short_4h, cloud_4h, trend_4h = bf.get_supertrend_cloud(
-                    candle_4h, '4h', up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2)
+                if ticker == "EOS/USDT":
+                    line_alert.send_message("EOS")
+                    # long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
+                    #     candle_5m, '5m', up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2)
+                    long_4h, short_4h, cloud_4h, trend_4h = bf.get_supertrend_cloud(
+                        candle_4h, '4h', up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2)
+                else:
+                    continue
 
             # --------------
             boolean_list = [long_5m, short_5m,
@@ -191,7 +196,7 @@ try:
 
             for boolean in boolean_list:
                 if boolean == True:
-                    line_alert.send_message(boolean_list)
+                    line_alert.send_message(f"{ticker} | {boolean_list}")
 
             # --------------
             trend_5m.append(ticker)
