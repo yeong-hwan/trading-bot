@@ -98,15 +98,15 @@ def get_supertrend(candle, period, atr_multiplier, up_trend_line, down_trend_lin
         else:
             trend = 1
 
-    low_trend_line = round(down_trend_line, 5)
-    donw_trend = round(up_trend_line, 5)
+    down_trend_line = round(down_trend_line, 5)
+    up_trend_line = round(up_trend_line, 5)
 
-    supertrend_line = low_trend_line if trend == 1 else up_trend_line
+    supertrend_line = down_trend_line if trend == 1 else up_trend_line
 
     # print("------------\n", supertrend_line,
     #       candle_close, low_trend_line, up_trend_line, "\n")
 
-    return supertrend_line, up_trend_line, low_trend_line
+    return supertrend_line, up_trend_line, down_trend_line
 
 
 def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend_2, down_trend_2, btc=False):
@@ -149,7 +149,7 @@ def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend
         or cross_under(candle_close_series, supertrend_line_2) \
         and candle_close_current > supertrend_line_1 \
         or cross_over(candle_close_series, supertrend_line_2) \
-        and candle_close_current < supertrend_line_2
+        and candle_close_current < supertrend_line_1
 
     # in_long, in_short = False, False
 
