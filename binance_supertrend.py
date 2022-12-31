@@ -94,7 +94,7 @@ try:
             mid_day_kst = "PM"
 
     #
-    #
+    # time monitor not used
     #
 
     # ------------------ supertrend cloud ----------------
@@ -108,13 +108,16 @@ try:
             # -------- json ----------
             trend_5m_list = list()
             trend_4h_list = list()
-            # sever
-            trend_5m_path = "/var/trading-bot/trend_5m.json"
-            trend_4h_path = "/var/trading-bot/trend_4h.json"
 
-            # # local
-            # trend_5m_path = "trend_5m.json"
-            # trend_4h_path = "trend_4h.json"
+            # ------ Server & Local Toggel ------
+            # Server
+            # trend_5m_path = "/var/trading-bot/trend_5m.json"
+            # trend_4h_path = "/var/trading-bot/trend_4h.json"
+
+            # Local
+            trend_5m_path = "trend_5m.json"
+            trend_4h_path = "trend_4h.json"
+            # ---------------------------------
 
             try:
                 with open(trend_5m_path, 'r') as json_file:
@@ -173,6 +176,7 @@ try:
             time.sleep(0.02)
 
             # get supertrend cloud
+            # continue skip current ticker
             if ticker == "BTC/USDT":
                 continue
                 long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
@@ -265,7 +269,7 @@ try:
 
                 isolated = True
 
-                # short position
+                # short position setting
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'SHORT':
                         amt_short = float(position["positionAmt"])
@@ -274,7 +278,7 @@ try:
                         isolated = position['isolated']
                         break
 
-                # long position
+                # long position setting
                 for position in balance['info']['positions']:
                     if position['symbol'] == target_coin_symbol and position['positionSide'] == 'LONG':
                         amt_long = float(position["positionAmt"])

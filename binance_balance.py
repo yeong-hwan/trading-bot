@@ -56,7 +56,7 @@ total_krw = format(total_money_krw, ',')
 
 print("| Total USD :", total_usd, "$")
 print("| Total KRW :", total_krw, "₩")
-print("| Exchange Rate :", exchange_rate, "$")
+print("| Exchange Rate($) :", exchange_rate, "₩")
 print("| Positioned :", used_money, "$")
 print("| Remainder :", free_money, "$", "\n|")
 
@@ -67,20 +67,20 @@ print("| Remainder :", free_money, "$", "\n|")
 # print("| Leverage :", set_leverage, "\n|")
 # message_status += f"| Leverage : {set_leverage}\n|\n"
 
-print(bf.get_top_coin_list(binance, 5))
-
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
 
+print("Top Coin List\n", bf.get_top_coin_list(binance, 5), "\n")
 
-try:
-    bf.run_bot()
 
-    schedule.every(10).seconds.do(run_bot)
+# try:
+#     bf.run_bot()
 
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+#     schedule.every(10).seconds.do(run_bot)
 
-except Exception as e:
-    line_alert.send_message(str(e))
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(1)
+
+# except Exception as e:
+#     line_alert.send_message(str(e))
