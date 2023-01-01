@@ -52,6 +52,7 @@ try:
 except Exception as e:
     print("| Exception by First | Not Positioned")
 
+line_alert.send_message("supertrend working")
 
 try:
     #
@@ -97,6 +98,9 @@ try:
     # time monitor not used
     #
 
+    # ------------------ banned ticker list --------------
+    banned_ticker_list = ["SRM/USDT", "FTT/USDT"]
+
     # ------------------ supertrend cloud ----------------
     ticker_order = 1
     message_info = ""
@@ -111,13 +115,13 @@ try:
 
             # ------ Server & Local Toggel ------
             # Server
-            # trend_5m_path = "/var/trading-bot/trend_5m.json"
-            # trend_4h_path = "/var/trading-bot/trend_4h.json"
+            trend_5m_path = "/var/trading-bot/trend_5m.json"
+            trend_4h_path = "/var/trading-bot/trend_4h.json"
 
             # Local
-            trend_5m_path = "trend_5m.json"
-            trend_4h_path = "trend_4h.json"
-            # ---------------------------------
+            # trend_5m_path = "trend_5m.json"
+            # trend_4h_path = "trend_4h.json"
+            # -----------------------------------
 
             try:
                 with open(trend_5m_path, 'r') as json_file:
@@ -151,6 +155,7 @@ try:
                     trend_4h = trend_4h_list.pop(i)
                     break
 
+            # delete ticker from trend_ by pop()
             try:
                 trend_5m.pop()
             except Exception as e:
@@ -177,7 +182,13 @@ try:
 
             # get supertrend cloud
             # continue skip current ticker
-            if ticker == "BTC/USDT":
+
+            # exception for banned_ticker_list
+            if ticker in banned_ticker_list:
+                # line_alert.send_message("banned_ticker")
+                continue
+
+            elif ticker == "BTC/USDT":
                 continue
                 long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
                     candle_5m, '5m', up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2, True)
@@ -185,10 +196,10 @@ try:
                     candle_4h, '4h', up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2, True)
 
             else:
-                if ticker == "EOS/USDT":
-                    line_alert.send_message("EOS")
-                    # long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
-                    #     candle_5m, '5m', up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2)
+                if ticker == "SOL/USDT":
+                    line_alert.send_message("SOL")
+                    long_5m, short_5m, cloud_5m, trend_5m = bf.get_supertrend_cloud(
+                        candle_5m, '5m', up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2)
                     long_4h, short_4h, cloud_4h, trend_4h = bf.get_supertrend_cloud(
                         candle_4h, '4h', up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2)
                 else:
@@ -249,8 +260,17 @@ try:
 
                 buy_amount = max_amount / 10
 
-                buy_amount = float(binance.amount_to_precision(
-                    target_coin_ticker, buy_amount))
+                line_alert.send_message(buy_amount)
+
+                try:
+                    buy_amount = float(binance.amount_to_precision(
+                        target_coin_ticker, buy_amount))
+                # avoid error
+                except Exception as e:
+                    # https://github.com/ccxt/ccxt/blob/master/python/ccxt/base/exchange.py#L3267
+                    pass
+
+                line_alert.send_message(buy_amount)
 
                 # round amounts
                 buy_amount = round(buy_amount, 5)

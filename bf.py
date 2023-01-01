@@ -90,7 +90,8 @@ def get_supertrend(candle, period, atr_multiplier, up_trend_line, down_trend_lin
     up_trend_line = round(up_trend_line, 5)
     down_trend_line = round(down_trend_line, 5)
 
-    line_alert.send_message(f"\n\natr: {atr}\nhb: {high_band}\nlb: {low_band}")
+    line_alert.send_message(
+        f"\n\natr: {atr}\nhigh band: {high_band}\nlow band: {low_band}")
 
     if candle_close > up_trend_line:
         up_trend_line = max(up_trend_line, high_band)
