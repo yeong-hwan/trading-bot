@@ -7,6 +7,7 @@ import line_alert
 import numpy as np
 from datetime import datetime
 import ta
+import pandas_ta
 
 pd.set_option('display.max_rows', None)
 # ----------------- binance functions -----------------------
@@ -93,27 +94,27 @@ def get_supertrend(candle, period, atr_multiplier, up_trend_line, down_trend_lin
     line_alert.send_message(
         f"\n\natr: {atr}\nhigh band: {high_band}\nlow band: {low_band}")
 
-    if candle_close > up_trend_line:
-        up_trend_line = max(up_trend_line, high_band)
-    else:
-        up_trend_line = high_band
+    # if candle_close > up_trend_line:
+    #     up_trend_line = max(up_trend_line, high_band)
+    # else:
+    #     up_trend_line = high_band
 
-    if candle_close < down_trend_line:
-        down_trend_line = min(down_trend_line, low_band)
-    else:
-        down_trend_line = low_band
+    # if candle_close < down_trend_line:
+    #     down_trend_line = min(down_trend_line, low_band)
+    # else:
+    #     down_trend_line = low_band
 
-    trend = 1
+    # trend = 1
 
-    if candle_close > down_trend_line:
-        trend = 1
-    else:
-        if candle_close < up_trend_line:
-            trend = -1
-        else:
-            trend = 1
+    # if candle_close > down_trend_line:
+    #     trend = 1
+    # else:
+    #     if candle_close < up_trend_line:
+    #         trend = -1
+    #     else:
+    #         trend = 1
 
-    supertrend_line = up_trend_line if trend == 1 else down_trend_line
+    # supertrend_line = up_trend_line if trend == 1 else down_trend_line
 
     """
     up_lev(low_band) = hl2 - multi * atr(period)
@@ -139,15 +140,18 @@ def get_supertrend(candle, period, atr_multiplier, up_trend_line, down_trend_lin
     # print("------------\n", supertrend_line,
     #       candle_close, low_trend_line, up_trend_line, "\n")
 
-    return supertrend_line, up_trend_line, down_trend_line
+    return supertrend_line
+    # , up_trend_line, down_trend_line
 
 
-def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend_2, down_trend_2, btc=False):
+# , up_trend_1, down_trend_1, up_trend_2, down_trend_2,
+def get_supertrend_cloud(candle, candle_type, btc=False):
 
     candle_close_series = candle['close']
     candle_close_current = candle_close_series[-1]
 
     period_1, multi_1, period_2, multi_2 = 0, 0, 0, 0
+    supertrend_line_1, supertrend_line_2 = 0, 0
 
     # ---------------- variables setting --------------------
     if candle_type == "5m":
@@ -159,11 +163,21 @@ def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend
     elif candle_type == "4h":
         period_1, multi_1, period_2, multi_2 = 10, 3, 10, 6
 
-    supertrend_line_1, up_trend_line_1, down_trend_line_1 = get_supertrend(
-        candle, period_1, multi_1, up_trend_1, down_trend_1)
+    #
 
-    supertrend_line_2, up_trend_line_2, down_trend_line_2 = get_supertrend(
-        candle, period_2, multi_2, up_trend_2, down_trend_2)
+    supertrend_1 = pandas_ta.supertrend(
+        high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
+    supertrend_line_1 = supertrend_1.iloc[-1][0]
+
+    supertrend_2 = pandas_ta.supertrend(
+        high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
+    supertrend_line_2 = supertrend_2.iloc[-1][0]
+
+    # supertrend_line_1, up_trend_line_1, down_trend_line_1 = get_supertrend(
+    #     candle, period_1, multi_1, up_trend_1, down_trend_1)
+
+    # supertrend_line_2, up_trend_line_2, down_trend_line_2 = get_supertrend(
+    #     candle, period_2, multi_2, up_trend_2, down_trend_2)
 
     long_condition = (cross_over(candle_close_series, supertrend_line_1)
                       and candle_close_current > supertrend_line_2) \
@@ -175,13 +189,13 @@ def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend
         or (cross_under(candle_close_series, supertrend_line_2)
             and candle_close_current < supertrend_line_1)
 
-    if candle_type == "4h":
-        candle_prev = candle_close_series[-2]
-        # line_alert.send_message(
-        #     f"\n candle_prev st_1 {candle_prev} {supertrend_line_1}\n candle_now < st_1 {candle_close_current} < {supertrend_line_1}\n candle_now > st_2 {candle_close_current} > {supertrend_line_2}")
+    # if candle_type == "4h":
+    #     candle_prev = scandle_close_series[-2]
+    # line_alert.send_message(
+    #     f"\n candle_prev st_1 {candle_prev} {supertrend_line_1}\n candle_now < st_1 {candle_close_current} < {supertrend_line_1}\n candle_now > st_2 {candle_close_current} > {supertrend_line_2}")
 
-        line_alert.send_message(
-            f"\nclose {candle_close_current}\nst_1 {supertrend_line_1}\nut_1 {up_trend_line_1}\ndt_1 {down_trend_line_1} \n\nst_2 {supertrend_line_2}\nut_2 {up_trend_line_2}\ndt_2 {down_trend_line_2}")
+    # line_alert.send_message(
+    #     f"\nclose {candle_close_current}\nst_1 {supertrend_line_1}\nut_1 {up_trend_line_1}\ndt_1 {down_trend_line_1} \n\nst_2 {supertrend_line_2}\nut_2 {up_trend_line_2}\ndt_2 {down_trend_line_2}")
 
     cloud_condition = (cross_under(candle_close_series, supertrend_line_1)
                        and candle_close_current > supertrend_line_2) \
@@ -206,7 +220,8 @@ def get_supertrend_cloud(candle, candle_type, up_trend_1, down_trend_1, up_trend
     #     if long_condition:
     #         in_short = False
 
-    return long_condition, short_condition, cloud_condition, [up_trend_line_1, down_trend_line_1, up_trend_line_2, down_trend_line_2]
+    return long_condition, short_condition, cloud_condition
+    #  , [up_trend_line_1, down_trend_line_1, up_trend_line_2, down_trend_line_2]
 
 
 #
