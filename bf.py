@@ -8,6 +8,9 @@ import numpy as np
 from datetime import datetime
 import ta
 import pandas_ta
+import yfinance as yf
+import math
+import matplotlib.pyplot as plt
 
 pd.set_option('display.max_rows', None)
 # ----------------- binance functions -----------------------
@@ -53,20 +56,84 @@ standard_date
 
 #     return atr[-1]
 
+def test_supertrend(candle, atr_period, multiplier):
 
-def cross_over(candle_close_series, line):
+    high = candle['high']
+    low = candle['low']
+    close = candle['close']
+
+    # calculate ATR
+    price_diffs = [high - low,
+                   high - close.shift(),
+                   close.shift() - low]
+    true_range = pd.concat(price_diffs, axis=1)
+    true_range = true_range.abs().max(axis=1)
+    # default ATR calculation in supertrend indicator
+    # atr = true_range.ewm(alpha=1/atr_period, min_periods=atr_period).mean()
+    # # df['atr'] = df['tr'].rolling(atr_period).mean()
+
+    atr = ta.volatility.average_true_range(high, low, close, atr_period)[-1]
+
+    # HL2 is simply the average of high and low prices
+    hl2 = (high + low) / 2
+    # upperband and lowerband calculation
+    # notice that final bands are set to be equal to the respective bands
+    final_upperband = upperband = hl2 + (multiplier * atr)
+    final_lowerband = lowerband = hl2 - (multiplier * atr)
+
+    # initialize Supertrend column to True
+    supertrend = [True] * len(candle)
+
+    for i in range(1, len(candle.index)):
+        curr, prev = i, i-1
+
+        # if current close price crosses above upperband
+        if close[curr] > final_upperband[prev]:
+            supertrend[curr] = True
+        # if current close price crosses below lowerband
+        elif close[curr] < final_lowerband[prev]:
+            supertrend[curr] = False
+        # else, the trend continues
+        else:
+            supertrend[curr] = supertrend[prev]
+
+            # adjustment to the final bands
+            if supertrend[curr] == True and final_lowerband[curr] < final_lowerband[prev]:
+                final_lowerband[curr] = final_lowerband[prev]
+            if supertrend[curr] == False and final_upperband[curr] > final_upperband[prev]:
+                final_upperband[curr] = final_upperband[prev]
+
+        return_supertrend = 0
+
+        # to remove bands according to the trend direction
+        if supertrend[curr] == True:
+            final_upperband[curr] = np.nan
+            # return_supertrend = final_lowerband[curr]
+        else:
+            final_lowerband[curr] = np.nan
+            # return_supertrend = final_upperband[curr]
+
+    return pd.DataFrame({
+        'Supertrend': supertrend,
+        'Final Lowerband': final_lowerband,
+        'Final Upperband': final_upperband
+        # 'supertrend_return':  return_supertrend
+    }, index=candle.index)
+
+
+def cross_over(candle_close_current, candle_close_before, supertrend_line):
     cross_over_check = False
 
-    if (candle_close_series[-1] > line) & (candle_close_series[-2] < line):
+    if (candle_close_current > supertrend_line) & (candle_close_before < supertrend_line):
         cross_over_check = True
 
     return cross_over_check
 
 
-def cross_under(candle_close_series, line):
+def cross_under(candle_close_current, candle_close_before, supertrend_line):
     cross_under_check = False
 
-    if (candle_close_series[-1] < line) & (candle_close_series[-2] > line):
+    if (candle_close_current < supertrend_line) & (candle_close_before > supertrend_line):
         cross_under_check = True
 
     return cross_under_check
@@ -149,6 +216,7 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
 
     candle_close_series = candle['close']
     candle_close_current = candle_close_series[-1]
+    candle_close_before = candle_close_series[-2]
 
     period_1, multi_1, period_2, multi_2 = 0, 0, 0, 0
     supertrend_line_1, supertrend_line_2 = 0, 0
@@ -167,11 +235,16 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
 
     supertrend_1 = pandas_ta.supertrend(
         high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
-    supertrend_line_1 = supertrend_1.iloc[-1][0]
+    supertrend_line_1 = supertrend_1.iloc[-8][0]
+    if candle_type == "5m":
+        print(supertrend_1.tail(n=80))
 
     supertrend_2 = pandas_ta.supertrend(
         high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
-    supertrend_line_2 = supertrend_2.iloc[-1][0]
+    supertrend_line_2 = supertrend_2.iloc[-8][0]
+    if candle_type == "5m":
+        print(supertrend_2.tail(n=80))
+        print(supertrend_line_1, supertrend_line_2)
 
     # supertrend_line_1, up_trend_line_1, down_trend_line_1 = get_supertrend(
     #     candle, period_1, multi_1, up_trend_1, down_trend_1)
@@ -179,15 +252,31 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     # supertrend_line_2, up_trend_line_2, down_trend_line_2 = get_supertrend(
     #     candle, period_2, multi_2, up_trend_2, down_trend_2)
 
-    long_condition = (cross_over(candle_close_series, supertrend_line_1)
+    long_condition = (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
                       and candle_close_current > supertrend_line_2) \
-        or (cross_over(candle_close_series, supertrend_line_2)
+        or (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
             and candle_close_current > supertrend_line_1)
 
-    short_condition = (cross_under(candle_close_series, supertrend_line_1)
+    if (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
+            and candle_close_current > supertrend_line_2):
+        line_alert.send_message("long_1")
+
+    if (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
+            and candle_close_current > supertrend_line_1):
+        line_alert.send_message("long_2")
+
+    short_condition = (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
                        and candle_close_current < supertrend_line_2) \
-        or (cross_under(candle_close_series, supertrend_line_2)
+        or (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
             and candle_close_current < supertrend_line_1)
+
+    if (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
+            and candle_close_current < supertrend_line_2):
+        line_alert.send_message("short_1")
+
+    if (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
+            and candle_close_current < supertrend_line_1):
+        line_alert.send_message("short_2")
 
     # if candle_type == "4h":
     #     candle_prev = scandle_close_series[-2]
@@ -197,13 +286,13 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     # line_alert.send_message(
     #     f"\nclose {candle_close_current}\nst_1 {supertrend_line_1}\nut_1 {up_trend_line_1}\ndt_1 {down_trend_line_1} \n\nst_2 {supertrend_line_2}\nut_2 {up_trend_line_2}\ndt_2 {down_trend_line_2}")
 
-    cloud_condition = (cross_under(candle_close_series, supertrend_line_1)
+    cloud_condition = (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
                        and candle_close_current > supertrend_line_2) \
-        or (cross_over(candle_close_series, supertrend_line_1)
+        or (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
             and candle_close_current < supertrend_line_2) \
-        or (cross_under(candle_close_series, supertrend_line_2)
+        or (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
             and candle_close_current > supertrend_line_1) \
-        or (cross_over(candle_close_series, supertrend_line_2)
+        or (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
             and candle_close_current < supertrend_line_1)
 
     # in_long, in_short = False, False
