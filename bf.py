@@ -8,9 +8,8 @@ import numpy as np
 from datetime import datetime
 import ta
 import pandas_ta
-import yfinance as yf
-import math
-import matplotlib.pyplot as plt
+# import math
+# import matplotlib.pyplot as plt
 
 pd.set_option('display.max_rows', None)
 # ----------------- binance functions -----------------------
@@ -236,15 +235,15 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     supertrend_1 = pandas_ta.supertrend(
         high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
     supertrend_line_1 = supertrend_1.iloc[-8][0]
-    if candle_type == "5m":
-        print(supertrend_1.tail(n=80))
+    # if candle_type == "5m":
+    #     print(supertrend_1.tail(n=80))
 
     supertrend_2 = pandas_ta.supertrend(
         high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
     supertrend_line_2 = supertrend_2.iloc[-8][0]
-    if candle_type == "5m":
-        print(supertrend_2.tail(n=80))
-        print(supertrend_line_1, supertrend_line_2)
+    # if candle_type == "5m":
+    # print(supertrend_2.tail(n=80))
+    # print(supertrend_line_1, supertrend_line_2)
 
     # supertrend_line_1, up_trend_line_1, down_trend_line_1 = get_supertrend(
     #     candle, period_1, multi_1, up_trend_1, down_trend_1)
@@ -309,7 +308,7 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     #     if long_condition:
     #         in_short = False
 
-    return long_condition, short_condition, cloud_condition
+    return long_condition, short_condition, cloud_condition, supertrend_line_1, supertrend_line_2
     #  , [up_trend_line_1, down_trend_line_1, up_trend_line_2, down_trend_line_2]
 
 

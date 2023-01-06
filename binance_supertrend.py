@@ -10,7 +10,6 @@ import original_key
 import bf
 import line_alert
 import traceback
-import schedule
 
 
 # ---------- key decoding ---------------
@@ -39,10 +38,10 @@ tickers = binance.fetch_tickers()
 positioned_list = list()
 
 # server
-# positioned_file_path = "/var/trading-bot/positioned_list.json"
+positioned_file_path = "/var/trading-bot/positioned_list.json"
 
 # local
-positioned_file_path = "positioned_list.json"
+# positioned_file_path = "positioned_list.json"
 
 
 try:
@@ -52,7 +51,7 @@ try:
 except Exception as e:
     print("| Exception by First | Not Positioned")
 
-line_alert.send_message("supertrend working")
+# line_alert.send_message("supertrend working")
 
 try:
     #
@@ -109,6 +108,7 @@ try:
     # ------------------ supertrend cloud ----------------
     ticker_order = 1
     message_info = ""
+    report_message = ""
 
     for ticker in target_coin_list:
 
@@ -175,6 +175,9 @@ try:
             long_5m, short_5m, cloud_5m = False, False, False
             long_4h, short_4h, cloud_4h = False, False, False
 
+            supertrend_line_1_5m, supertrend_line_2_5m = 0, 0
+            supertrend_line_1_4h, supertrend_line_2_4h = 0, 0
+
             candle_5m = bf.get_ohlcv(
                 binance, ticker, '5m')
 
@@ -193,27 +196,21 @@ try:
                 continue
 
             elif ticker == "BTC/USDT":
-                continue
-                long_5m, short_5m, cloud_5m = bf.get_supertrend_cloud(
+                # continue
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m = bf.get_supertrend_cloud(
                     candle_5m, '5m', True)
-                long_4h, short_4h, cloud_4h = bf.get_supertrend_cloud(
+                long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
                     candle_4h, '4h', True)
 
             else:
-                if ticker == "SOL/USDT":
-                    long_5m, short_5m, cloud_5m = bf.get_supertrend_cloud(
-                        candle_5m, '5m')
-                    # , up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2
-                    # print("\nst_1\n")
-                    # print(bf.test_supertrend(candle_5m, 6, 10))
-                    # print("\nst_2\n")
-                    # print(bf.test_supertrend(candle_5m, 10, 6))
+                # if ticker == "SOL/USDT":
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m = bf.get_supertrend_cloud(
+                    candle_5m, '5m')
 
-                    long_4h, short_4h, cloud_4h = bf.get_supertrend_cloud(
-                        candle_4h, '4h')
-                    # , up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2
-                else:
-                    continue
+                long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
+                    candle_4h, '4h')
+                # else:
+                #     continue
 
             # --------------
             boolean_list = [long_5m, short_5m,
@@ -371,13 +368,36 @@ try:
                     print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
                     print("| 5m")
                     print(
-                        f"|  Long : {long_4h}\n|  Short : {short_4h}\n|  Cloud : {cloud_4h}")
+                        f"|   Long : {long_5m}\n|   Short : {short_5m}\n|   Cloud : {cloud_5m}")
                     print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
                     print("| 4h")
                     print(
-                        f"|  Long : {long_4h}\n|  Short : {short_4h}\n|  Cloud : {cloud_4h}")
+                        f"|   Long : {long_4h}\n|   Short : {short_4h}\n|   Cloud : {cloud_4h}")
 
-                    # orders = binance.fetch_orders(ticker)
+                    candle_close_current = candle_5m['close'][-1]
+
+                    # condition_message += f"\n\n{target_coin_ticker}\n"
+                    # condition_message += "| 5m\n"
+                    # condition_message += f"|   Now : {candle_close_current_5m}\n"
+                    # condition_message += f"|   St1 : {supertrend_line_1_5m}\n"
+                    # condition_message += f"|   St2 : {supertrend_line_2_5m}\n"
+                    # condition_message += f"|   Long : {long_5m}\n|   Short : {short_5m}\n|   Cloud : {cloud_5m}\n"
+                    # condition_message += "| 4h\n"
+                    # condition_message += f"|   Now : {candle_close_current_4h}\n"
+                    # condition_message += f"|   St1 : {supertrend_line_1_4h}\n"
+                    # condition_message += f"|   St2 : {supertrend_line_2_4h}\n"
+                    # condition_message += f"|   Long : {long_4h}\n|   Short : {short_4h}\n|   Cloud : {cloud_4h}\n"
+
+                    # line_alert.send_message(condition_message)
+
+                    supertrend_line_1_5m, supertrend_line_2_5m = round(
+                        supertrend_line_1_5m, 4), round(supertrend_line_2_5m, 4)
+                    supertrend_line_1_4h, supertrend_line_2_4h = round(
+                        supertrend_line_1_4h, 4), round(supertrend_line_2_4h, 4)
+
+                    report_message += f"\n{ticker_order}. {target_coin_ticker} Now : {candle_close_current}\n"
+                    report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
+                    report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
 # ----------------------- enter position -----------------------
 
@@ -575,6 +595,9 @@ try:
     # print(trend_5m_list, trend_4h_list)
 
     # line-alert
+
+    line_alert.send_message(report_message)
+
 
 except Exception as e:
     print("Exception :", e)

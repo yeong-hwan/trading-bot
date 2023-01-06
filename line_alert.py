@@ -20,3 +20,5 @@ def send_message(msg):
 
     except Exception as e:
         print(e)
+
+# send_message("line_alert test")
