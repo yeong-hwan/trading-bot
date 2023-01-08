@@ -268,17 +268,20 @@ try:
                 if max_amount == 0:
                     max_amount = minimum_amount * 5
 
-                buy_amount = max_amount / 10
+                # buy_amount = max_amount / 2
 
                 # line_alert.send_message(buy_amount)
 
-                try:
-                    buy_amount = float(binance.amount_to_precision(
-                        target_coin_ticker, buy_amount))
-                # avoid error
-                except Exception as e:
-                    # https://github.com/ccxt/ccxt/blob/master/python/ccxt/base/exchange.py#L3267
-                    buy_amount = minimum_amount
+                # try:
+                #     buy_amount = float(binance.amount_to_precision(
+                #         target_coin_ticker, buy_amount))
+                # # avoid error
+                # except Exception as e:
+                #     # https://github.com/ccxt/ccxt/blob/master/python/ccxt/base/exchange.py#L3267
+                    
+                #     # buy_amount = max_amount / 2
+
+                buy_amount = minimum_amount * 5
 
                 # line_alert.send_message(buy_amount)
 

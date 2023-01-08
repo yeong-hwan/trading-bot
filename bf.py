@@ -844,13 +844,13 @@ def get_min_amount(binance, ticker):
     coin_price = coin_info['last']
 
     message = ""
-    print(f"| min_cost : {min_cost} $")
+    print(f"| min_cost : {min_cost} $ -> min_amount")
     # print(f"| min_amount : {min_amount} EA")
-    print(f"| min_price : {min_price} $")
+    # print(f"| min_price : {min_price} $")
     print(f"| Coin_price : {coin_price} $")
     message += f"| min_cost : {min_cost} $\n"
     message += f"| min_amount : {min_amount} EA\n"
-    message += f"| min_price : {min_price} $\n"
+    # message += f"| min_price : {min_price} $\n"
     message += f"| Coin_price : {coin_price} $\n"
 
     # get mininum unit price to be able to order
