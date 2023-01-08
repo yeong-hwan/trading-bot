@@ -196,7 +196,7 @@ try:
                 continue
 
             elif ticker == "BTC/USDT":
-                # continue
+                continue
                 long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m = bf.get_supertrend_cloud(
                     candle_5m, '5m', True)
                 long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
@@ -207,8 +207,8 @@ try:
                 long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m = bf.get_supertrend_cloud(
                     candle_5m, '5m')
 
-                long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
-                    candle_4h, '4h')
+                # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
+                #     candle_4h, '4h')
                 # else:
                 #     continue
 
@@ -278,10 +278,10 @@ try:
                 # # avoid error
                 # except Exception as e:
                 #     # https://github.com/ccxt/ccxt/blob/master/python/ccxt/base/exchange.py#L3267
-                    
+
                 #     # buy_amount = max_amount / 2
 
-                buy_amount = minimum_amount * 5
+                buy_amount = minimum_amount * 5 * set_leverage
 
                 # line_alert.send_message(buy_amount)
 
@@ -290,8 +290,8 @@ try:
                 minimum_amount = round(minimum_amount, 5)
                 max_amount = round(max_amount, 5)
 
-                if buy_amount < minimum_amount:
-                    buy_amount = minimum_amount
+                # if buy_amount < minimum_amount:
+                #     buy_amount = minimum_amount
 
                 print(f"| min_amount : {minimum_amount} EA")
                 print(f"| max_amount : {max_amount} EA")
@@ -395,12 +395,12 @@ try:
 
                     supertrend_line_1_5m, supertrend_line_2_5m = round(
                         supertrend_line_1_5m, 4), round(supertrend_line_2_5m, 4)
-                    supertrend_line_1_4h, supertrend_line_2_4h = round(
-                        supertrend_line_1_4h, 4), round(supertrend_line_2_4h, 4)
+                    # supertrend_line_1_4h, supertrend_line_2_4h = round(
+                    #     supertrend_line_1_4h, 4), round(supertrend_line_2_4h, 4)
 
                     report_message += f"\n{ticker_order}. {target_coin_ticker} Now : {candle_close_current}\n"
                     report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
-                    report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
+                    # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
 # ----------------------- enter position -----------------------
 
