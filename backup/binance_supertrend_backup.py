@@ -114,6 +114,64 @@ try:
 
         if "/USDT" in ticker:
 
+            # -------- json ----------
+            # trend_5m_list = list()
+            # trend_4h_list = list()
+
+            # ------ Server & Local Toggel ------
+            # Server
+            # trend_5m_path = "/var/trading-bot/trend_5m.json"
+            # trend_4h_path = "/var/trading-bot/trend_4h.json"
+
+            # Local
+            # trend_5m_path = "trend_5m.json"
+            # trend_4h_path = "trend_4h.json"
+            # -----------------------------------
+
+            # try:
+            #     with open(trend_5m_path, 'r') as json_file:
+            #         trend_5m_list = json.load(json_file)
+
+            # except Exception as e:
+            #     print("| Exception by First | 5m No trend")
+
+            # try:
+            #     with open(trend_4h_path, 'r') as json_file:
+            #         trend_4h_list = json.load(json_file)
+
+            # except Exception as e:
+            #     print("| Exception by First | 4h No trend")
+
+            # ---------------------------------
+            # for reset json
+            # trend_5m_list.append([0, 0, 0, 0, ticker])
+            # trend_4h_list.append([0, 0, 0, 0, ticker])
+
+            # trend_5m, trend_4h = list(), list()
+
+            # for i in range(len(trend_5m_list)):
+            #     if trend_5m_list[i][-1] == ticker:
+            #         trend_5m = trend_5m_list.pop(i)
+            #         break
+
+            # for i in range(len(trend_4h_list)):
+            #     if trend_4h_list[i][-1] == ticker:
+            #         trend_4h = trend_4h_list.pop(i)
+            #         break
+
+            # delete ticker from trend_ by pop()
+            # try:
+            #     trend_5m.pop()
+            # except Exception as e:
+            #     trend_5m = [0, 0, 0, 0]
+            # up_trend_5m_1, down_trend_5m_1, up_trend_5m_2, down_trend_5m_2 = trend_5m
+
+            # try:
+            #     trend_4h.pop()
+            # except Exception as e:
+            #     trend_4h = [0, 0, 0, 0]
+            # up_trend_4h_1, down_trend_4h_1, up_trend_4h_2, down_trend_4h_2 = trend_4h
+
             long_5m, short_5m, cloud_5m = False, False, False
             long_4h, short_4h, cloud_4h = False, False, False
 
@@ -122,17 +180,19 @@ try:
 
             candle_5m = bf.get_ohlcv(
                 binance, ticker, '5m')
+
             time.sleep(0.02)
 
             candle_4h = bf.get_ohlcv(
                 binance, ticker, '4h')
             time.sleep(0.02)
 
-        # get supertrend cloud
-        # continue skip current ticker
+            # get supertrend cloud
+            # continue skip current ticker
 
             # exception for banned_ticker_list
             if ticker in banned_ticker_list:
+                # line_alert.send_message("banned_ticker")
                 continue
 
             elif ticker == "BTC/USDT":
@@ -161,6 +221,16 @@ try:
                     line_alert.send_message(f"{ticker} | {boolean_list}")
 
             # --------------
+            # trend_5m.append(ticker)
+            # trend_4h.append(ticker)
+            # trend_5m_list.append(trend_5m)
+            # trend_4h_list.append(trend_4h)
+
+            # with open(trend_5m_path, 'w') as outfile:
+            #     json.dump(trend_5m_list, outfile)
+
+            # with open(trend_4h_path, 'w') as outfile:
+            #     json.dump(trend_4h_list, outfile)
 
 # ----------------------------------------------
 
@@ -198,12 +268,30 @@ try:
                 if max_amount == 0:
                     max_amount = minimum_amount * 5
 
+                # buy_amount = max_amount / 2
+
+                # line_alert.send_message(buy_amount)
+
+                # try:
+                #     buy_amount = float(binance.amount_to_precision(
+                #         target_coin_ticker, buy_amount))
+                # # avoid error
+                # except Exception as e:
+                #     # https://github.com/ccxt/ccxt/blob/master/python/ccxt/base/exchange.py#L3267
+
+                #     # buy_amount = max_amount / 2
+
                 buy_amount = minimum_amount * 5 * set_leverage
+
+                # line_alert.send_message(buy_amount)
 
                 # round amounts
                 buy_amount = round(buy_amount, 5)
                 minimum_amount = round(minimum_amount, 5)
                 max_amount = round(max_amount, 5)
+
+                # if buy_amount < minimum_amount:
+                #     buy_amount = minimum_amount
 
                 print(f"| min_amount : {minimum_amount} EA")
                 print(f"| max_amount : {max_amount} EA")
@@ -245,11 +333,65 @@ try:
 
                     time.sleep(0.1)
 
+                # # positioned case
+                # if bf.check_coin_in_list(positioned_list, ticker) == True:
+                #     time.sleep(0.1)
+
+                #     line_alert.send_message(
+                #         f"\n\n{ticker_order}.\n| {ticker}\n| pass by positioned")
+
+                #     # message_info += f"\n\n{ticker_order}.\n| {target_coin_ticker}\n| pass by break through listed"
+
+                #     # no position
+                #     # if abs(amt_short) == 0 and abs(amt_long) == 0:
+                #     #     # binance.cancel_all_orders(target_coin_ticker)
+                #     #     time.sleep(0.1)
+
+                #     #     # positioned_list.remove()
+
+                #     #     with open(positioned_file_path, 'w') as outfile:
+                #     #         json.dump(positioned_list, outfile)
+
+                #     #
+                #     #
+                #     #
+
+                # # if True:
+                # #     continue
+                #     # not positioned
+                # else:
+                #     # logic period: 1m
+                #     # if minute & 1 == 0:
                 if True:
 
                     # ---------------------------------------------------------
 
+                    # ---------------------------------------------------------
+
+                    print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                    print("| 5m")
+                    print(
+                        f"|   Long : {long_5m}\n|   Short : {short_5m}\n|   Cloud : {cloud_5m}")
+                    print("-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -")
+                    print("| 4h")
+                    print(
+                        f"|   Long : {long_4h}\n|   Short : {short_4h}\n|   Cloud : {cloud_4h}")
+
                     candle_close_current = candle_5m['close'][-1]
+
+                    # condition_message += f"\n\n{target_coin_ticker}\n"
+                    # condition_message += "| 5m\n"
+                    # condition_message += f"|   Now : {candle_close_current_5m}\n"
+                    # condition_message += f"|   St1 : {supertrend_line_1_5m}\n"
+                    # condition_message += f"|   St2 : {supertrend_line_2_5m}\n"
+                    # condition_message += f"|   Long : {long_5m}\n|   Short : {short_5m}\n|   Cloud : {cloud_5m}\n"
+                    # condition_message += "| 4h\n"
+                    # condition_message += f"|   Now : {candle_close_current_4h}\n"
+                    # condition_message += f"|   St1 : {supertrend_line_1_4h}\n"
+                    # condition_message += f"|   St2 : {supertrend_line_2_4h}\n"
+                    # condition_message += f"|   Long : {long_4h}\n|   Short : {short_4h}\n|   Cloud : {cloud_4h}\n"
+
+                    # line_alert.send_message(condition_message)
 
                     supertrend_line_1_5m, supertrend_line_2_5m = round(
                         supertrend_line_1_5m, 4), round(supertrend_line_2_5m, 4)
@@ -439,6 +581,24 @@ try:
 
             ticker_order += 1
 
+    # try:
+    #     with open(trend_5m_path, 'r') as json_file:
+    #         trend_5m_list = json.load(json_file)
+
+    # except Exception as e:
+    #     print("| Exception by First | 5m No trend")
+
+    # try:
+    #     with open(trend_4h_path, 'r') as json_file:
+    #         trend_4h_list = json.load(json_file)
+
+    # except Exception as e:
+    #     print("| Exception by First | 4h No trend")
+
+    # print(trend_5m_list, trend_4h_list)
+
+    # line-alert
+
     line_alert.send_message(report_message)
 
 
@@ -446,3 +606,26 @@ except Exception as e:
     print("Exception :", e)
     line_alert.send_message("Exception : " + str(e))
     line_alert.send_message(traceback.format_exc())
+
+
+# def run_bot(binance):
+#     print(f"\n\nFetching new bars for {datetime.now().isoformat()}")
+
+#     long_condition, short_condition, cloud_condition = bf.get_supertrend_cloud(
+#         candle, '5m')
+
+#     print(
+#         f"Long : {long_condition}\nShort : {short_condition}\nCloud : {cloud_condition}")
+
+
+# try:
+#     schedule.every(10).seconds.do(run_bot, binance)
+#     # schedule.every(10).seconds.do(hello)
+
+#     while True:
+
+#         schedule.run_pending()
+#         time.sleep(1)
+
+# except Exception as e:
+#     line_alert.send_message(str(e))
