@@ -201,16 +201,20 @@ try:
                 budget_for_current_ticker = total_money_usd / 10
 
                 cost_to_amt_ratio = budget_for_current_ticker / minimum_cost
+                invest_ratio = cost_to_amt_ratio * set_leverage
 
-                buy_amount = minimum_amount * cost_to_amt_ratio * set_leverage
+                expected_budget = minimum_cost * invest_ratio
+                buy_amount = minimum_amount * invest_ratio
 
                 # round amounts
-                buy_amount = round(buy_amount, 5)
                 minimum_amount = round(minimum_amount, 5)
-                max_amount = round(max_amount, 5)
+                # max_amount = round(max_amount, 5)
+                expected_budget = round(expected_budget, 5)
+                buy_amount = round(buy_amount, 5)
 
                 print(f"| min_amount : {minimum_amount} EA")
-                print(f"| max_amount : {max_amount} EA")
+                # print(f"| max_amount : {max_amount} EA")
+                print(f"| expected_budget : {expected_budget} $")
                 print(f"| buy_amount : {buy_amount} EA")
 
                 amt_long, amt_short = 0, 0
