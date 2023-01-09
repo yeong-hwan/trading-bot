@@ -56,7 +56,7 @@ total_krw = format(total_money_krw, ',')
 
 print("| Total USD :", total_usd, "$")
 print("| Total KRW :", total_krw, "₩")
-print("| Exchange Rate($) :", exchange_rate, "₩")
+print("| Exchange Rate(1$) :", exchange_rate, "₩")
 print("| Positioned :", used_money, "$")
 print("| Remainder :", free_money, "$", "\n|")
 

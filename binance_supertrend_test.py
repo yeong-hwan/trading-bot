@@ -57,7 +57,7 @@ try:
     #
     #
     # ------------------ setting options ----------------------
-    invest_rate = 0.3
+    invest_rate = 1
     set_leverage = 3
 
     coin_cnt = 10
@@ -107,7 +107,6 @@ try:
 
     # ------------------ supertrend cloud ----------------
     ticker_order = 1
-    message_info = ""
     report_message = ""
 
     for ticker in target_coin_list:
@@ -177,11 +176,11 @@ try:
                 target_coin_symbol = ticker.replace("/", "")
                 time.sleep(0.05)
 
-                get_min_amount_tuple = bf.get_min_amount(
+                minimum_amount_tuple = bf.get_min_amount(
                     binance, target_coin_ticker)
 
-                minimum_amount = get_min_amount_tuple[0]
-                message_ticker += get_min_amount_tuple[1]
+                minimum_cost = minimum_amount_tuple[0]
+                minimum_amount = minimum_amount_tuple[1]
 
                 leverage = 0
 
@@ -198,7 +197,12 @@ try:
                 if max_amount == 0:
                     max_amount = minimum_amount * 5
 
-                buy_amount = minimum_amount * 5 * set_leverage
+                total_money_usd = float(balance['USDT']['total'])
+                budget_for_current_ticker = total_money_usd / 10
+
+                cost_to_amt_ratio = budget_for_current_ticker / minimum_cost
+
+                buy_amount = minimum_amount * cost_to_amt_ratio * set_leverage
 
                 # round amounts
                 buy_amount = round(buy_amount, 5)
