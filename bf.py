@@ -42,8 +42,10 @@ def cross_under(candle_close_current, candle_close_before, supertrend_line):
 def get_supertrend_cloud(candle, candle_type, btc=False):
 
     candle_close_series = candle['close']
-    candle_close_current = candle_close_series[-1]
-    candle_close_before = candle_close_series[-2]
+
+    # current : endded[-1], before : endded[-2]
+    candle_close_current = candle_close_series[-2]
+    candle_close_before = candle_close_series[-3]
 
     period_1, multi_1, period_2, multi_2 = 0, 0, 0, 0
     supertrend_line_1, supertrend_line_2 = 0, 0
