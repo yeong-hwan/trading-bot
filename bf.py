@@ -64,11 +64,11 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
 
     supertrend_1 = pandas_ta.supertrend(
         high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
-    supertrend_line_1 = supertrend_1.iloc[-1][0]
+    supertrend_line_1 = supertrend_1.iloc[-2][0]
 
     supertrend_2 = pandas_ta.supertrend(
         high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
-    supertrend_line_2 = supertrend_2.iloc[-1][0]
+    supertrend_line_2 = supertrend_2.iloc[-2][0]
 
     long_condition = (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
                       and candle_close_current > supertrend_line_2) \
