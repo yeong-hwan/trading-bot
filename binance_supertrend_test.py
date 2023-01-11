@@ -135,15 +135,15 @@ try:
                 continue
 
             elif ticker == "BTC/USDT":
-                continue
-                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m = bf.get_supertrend_cloud(
+                # continue
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, status = bf.get_supertrend_cloud(
                     candle_5m, '5m', True)
-                long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
-                    candle_4h, '4h', True)
+                # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h, status = bf.get_supertrend_cloud(
+                #     candle_4h, '4h', True)
 
             else:
                 # if ticker == "SOL/USDT":
-                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m = bf.get_supertrend_cloud(
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, status = bf.get_supertrend_cloud(
                     candle_5m, '5m')
 
                 # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
@@ -155,9 +155,8 @@ try:
             boolean_list = [long_5m, short_5m,
                             cloud_5m, long_4h, short_4h, cloud_4h]
 
-            for boolean in boolean_list:
-                if boolean == True:
-                    line_alert.send_message(f"{ticker} | {boolean_list}")
+            if True in boolean_list:
+                line_alert.send_message(f"{ticker} | {boolean_list[:3]}")
 
             # --------------
 
@@ -257,7 +256,7 @@ try:
 
                     # ---------------------------------------------------------
 
-                    candle_close_current = candle_5m['close'][-1]
+                    candle_close_current = candle_5m['close'][-2]
 
                     supertrend_line_1_5m, supertrend_line_2_5m = round(
                         supertrend_line_1_5m, 4), round(supertrend_line_2_5m, 4)
@@ -267,6 +266,8 @@ try:
                     report_message += f"\n{ticker_order}. {target_coin_ticker} Now : {candle_close_current}\n"
                     report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
                     # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
+
+                    report_message += f"| {status}"
 
 # ----------------------- enter position -----------------------
 

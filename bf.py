@@ -39,16 +39,34 @@ def cross_under(candle_close_current, candle_close_before, supertrend_line):
     return cross_under_check
 
 
+def side(candle_close_current, st_1, st_2):
+    result = ""
+
+    if (candle_close_current < st_1) & (candle_close_current > st_2):
+        result = "1>between>2"
+    if (candle_close_current > st_1) & (candle_close_current < st_2):
+        result = "2>between>1"
+
+    if (candle_close_current > st_1) & (candle_close_current > st_2):
+        result = "upside"
+    if (candle_close_current < st_1) & (candle_close_current < st_2):
+        result = "downside"
+
+    return result
+
+
 def get_supertrend_cloud(candle, candle_type, btc=False):
 
     candle_close_series = candle['close']
 
     # current : endded[-1], before : endded[-2]
-    candle_close_current = candle_close_series[-2]
-    candle_close_before = candle_close_series[-3]
+    # candle_close_current = candle_close_series[-2]
+    # candle_close_before = candle_close_series[-3]
 
     period_1, multi_1, period_2, multi_2 = 0, 0, 0, 0
     supertrend_line_1, supertrend_line_2 = 0, 0
+
+    long_condition, short_condition, cloud_condition = False, False, False
 
     # ---------------- variables setting --------------------
     if candle_type == "5m":
@@ -60,52 +78,103 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     elif candle_type == "4h":
         period_1, multi_1, period_2, multi_2 = 10, 3, 10, 6
 
-    #
+    # -2
+    status_current = ""
 
-    supertrend_1 = pandas_ta.supertrend(
-        high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
-    supertrend_line_1 = supertrend_1.iloc[-2][0]
+    # -3
+    status_before = ""
 
-    supertrend_2 = pandas_ta.supertrend(
-        high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
-    supertrend_line_2 = supertrend_2.iloc[-2][0]
+    for i in range(2, 4):
+        supertrend_1 = pandas_ta.supertrend(
+            high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
+        supertrend_line_1 = supertrend_1.iloc[-i][0]
 
-    long_condition = (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
-                      and candle_close_current > supertrend_line_2) \
-        or (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
-            and candle_close_current > supertrend_line_1)
+        supertrend_2 = pandas_ta.supertrend(
+            high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
+        supertrend_line_2 = supertrend_2.iloc[-i][0]
 
-    if (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
-            and candle_close_current > supertrend_line_2):
-        line_alert.send_message("long_1")
+        status_i = side(candle_close_series[-i],
+                        supertrend_line_1, supertrend_line_2)
 
-    if (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
-            and candle_close_current > supertrend_line_1):
-        line_alert.send_message("long_2")
+        if i == 2:
+            status_current = status_i
+            print(supertrend_line_1, supertrend_line_2)
+        elif i == 3:
+            status_before = status_i
+            print(supertrend_line_1, supertrend_line_2)
 
-    short_condition = (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
-                       and candle_close_current < supertrend_line_2) \
-        or (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
-            and candle_close_current < supertrend_line_1)
+    # between_slicing
+    if status_current[:2] == "1>" or status_current[:2] == "2>":
+        status_current = "between"
+    if status_before[:2] == "1>" or status_before[:2] == "2>":
+        status_before = "between"
 
-    if (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
-            and candle_close_current < supertrend_line_2):
-        line_alert.send_message("short_1")
+    status = [status_before, status_current]
 
-    if (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
-            and candle_close_current < supertrend_line_1):
-        line_alert.send_message("short_2")
+    if status_before == "between":
+        if status_current == "upside":
+            long_condition = True
+        elif status_current == "downside":
+            short_condition = True
 
-    cloud_condition = (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
-                       and candle_close_current > supertrend_line_2) \
-        or (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
-            and candle_close_current < supertrend_line_2) \
-        or (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
-            and candle_close_current > supertrend_line_1) \
-        or (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
-            and candle_close_current < supertrend_line_1)
+    else:
+        if status_current == "between":
+            cloud_condition = True
 
-    return long_condition, short_condition, cloud_condition, supertrend_line_1, supertrend_line_2
+    return long_condition, short_condition, cloud_condition, supertrend_line_1, supertrend_line_2, status
+
+    # long_condition = (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
+    #                   and candle_close_current > supertrend_line_2) \
+    #     or (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current > supertrend_line_1)
+
+    # if (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
+    #         and candle_close_current > supertrend_line_2):
+    #     line_alert.send_message("long_1")
+
+    # if (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current > supertrend_line_1):
+    #     line_alert.send_message("long_2")
+
+    # short_condition = (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
+    #                    and candle_close_current < supertrend_line_2) \
+    #     or (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current < supertrend_line_1)
+
+    # if (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
+    #         and candle_close_current < supertrend_line_2):
+    #     line_alert.send_message("short_1")
+
+    # if (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current < supertrend_line_1):
+    #     line_alert.send_message("short_2")
+
+    # cloud_condition = (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
+    #                    and candle_close_current > supertrend_line_2) \
+    #     or (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
+    #         and candle_close_current < supertrend_line_2) \
+    #     or (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current > supertrend_line_1) \
+    #     or (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current < supertrend_line_1)
+
+    # if (cross_under(candle_close_current, candle_close_before, supertrend_line_1)
+    #         and candle_close_current > supertrend_line_2):
+    #     line_alert.send_message("cloud_1")
+
+    # if (cross_over(candle_close_current, candle_close_before, supertrend_line_1)
+    #         and candle_close_current < supertrend_line_2):
+    #     line_alert.send_message("cloud_2")
+
+    # if (cross_under(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current > supertrend_line_1):
+    #     line_alert.send_message("cloud_3")
+
+    # if (cross_over(candle_close_current, candle_close_before, supertrend_line_2)
+    #         and candle_close_current < supertrend_line_1):
+    #     line_alert.send_message("cloud_4")
+
+    # return long_condition, short_condition, cloud_condition, supertrend_line_1, supertrend_line_2, status
 
 
 # ------------------ binance functions ---------------------
