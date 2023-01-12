@@ -49,6 +49,7 @@ try:
         positioned_list = json.load(json_file)
 
 except Exception as e:
+    line_alert.send_message("| Exception by First | Not Positioned")
     print("| Exception by First | Not Positioned")
 
 # line_alert.send_message("supertrend working")
@@ -136,14 +137,14 @@ try:
 
             elif ticker == "BTC/USDT":
                 # continue
-                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, status = bf.get_supertrend_cloud(
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, state = bf.get_supertrend_cloud(
                     candle_5m, '5m', True)
                 # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h, status = bf.get_supertrend_cloud(
                 #     candle_4h, '4h', True)
 
             else:
                 # if ticker == "SOL/USDT":
-                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, status = bf.get_supertrend_cloud(
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, state = bf.get_supertrend_cloud(
                     candle_5m, '5m')
 
                 # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
@@ -256,7 +257,7 @@ try:
 
                     # ---------------------------------------------------------
 
-                    candle_close_current = candle_5m['close'][-2]
+                    candle_close_current = candle_5m['close'][-3]
 
                     supertrend_line_1_5m, supertrend_line_2_5m = round(
                         supertrend_line_1_5m, 4), round(supertrend_line_2_5m, 4)
@@ -267,7 +268,7 @@ try:
                     report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
                     # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
-                    report_message += f"| {status}"
+                    report_message += f"| {state}"
 
 # ----------------------- enter position -----------------------
 
@@ -389,6 +390,8 @@ try:
                             positioned_amt_4h = buy_amt_data
                             positioned_coin_price_4h = coin_price_data
 
+                        ticker_data_5m = (
+                            candle_period_5m, position_side_5m, positioned_amt_5m, positioned_coin_price_5m)
 # -----------------------------------------------------------------
 
 #
@@ -397,23 +400,31 @@ try:
 
 # -----------------------  exit position -----------------------
                         # 5m
-                        if cloud_5m:
+                        if (cloud_5m and ticker_name == target_coin_ticker):
                             line_alert.send_message(
                                 f"{target_coin_ticker} 5m close position")
+
+                            line_alert.send_message(
+                                f"{ticker_data_5m}")
 
                             if position_side_5m == "long":
                                 params = {
                                     'positionSide': 'LONG'
                                 }
-                                binance.create_market_sell_order(
+                                close_long = binance.create_market_sell_order(
                                     target_coin_ticker, positioned_amt_5m, params)
+
+                                line_alert.send_message(
+                                    f"\nclose_long\n{close_long}")
 
                             if position_side_5m == "short":
                                 params = {
                                     'positionSide': 'SHORT'
                                 }
-                                binance.create_market_buy_order(
+                                close_short = binance.create_market_buy_order(
                                     target_coin_ticker, positioned_amt_5m, params)
+                                line_alert.send_message(
+                                    f"\nclose_short\n{close_short}")
 
                             positioned_list.remove(position_data)
 
