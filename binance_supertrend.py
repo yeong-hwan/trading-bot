@@ -58,7 +58,7 @@ try:
     #
     # ------------------ setting options ----------------------
     invest_rate = 1
-    set_leverage = 3
+    set_leverage = 5
 
     coin_cnt = 10
     top_coin_list = bf.get_top_coin_list(binance, coin_cnt)

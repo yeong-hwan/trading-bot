@@ -70,7 +70,7 @@ print("| Remainder :", free_money, "$", "\n|")
 print("---------------------------------------------\n")
 message_status += "--------------------------------------\n"
 
-print("Top Coin List\n", bf.get_top_coin_list(binance, 5), "\n")
+print("Top Coin List\n", bf.get_top_coin_list(binance, 10), "\n")
 
 
 # try:

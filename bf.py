@@ -42,13 +42,12 @@ def cross_under(candle_close_current, candle_close_before, supertrend_line):
 def side(candle_close_current, st_1, st_2):
     result = ""
 
-    if (candle_close_current < st_1) & (candle_close_current > st_2):
-        result = "1>between>2"
-    if (candle_close_current > st_1) & (candle_close_current < st_2):
-        result = "2>between>1"
+    if ((candle_close_current < st_1) & (candle_close_current > st_2)) or ((candle_close_current > st_1) & (candle_close_current < st_2)):
+        result = "cloud"
 
     if (candle_close_current > st_1) & (candle_close_current > st_2):
         result = "upside"
+
     if (candle_close_current < st_1) & (candle_close_current < st_2):
         result = "downside"
 
@@ -84,7 +83,7 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     # -3
     status_before = ""
 
-    for i in range(2, 4):
+    for i in range(3, 5):
         supertrend_1 = pandas_ta.supertrend(
             high=candle['high'], low=candle['low'], close=candle['close'], period=period_1, multiplier=multi_1)
         supertrend_line_1 = supertrend_1.iloc[-i][0]
@@ -96,10 +95,10 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
         status_i = side(candle_close_series[-i],
                         supertrend_line_1, supertrend_line_2)
 
-        if i == 2:
+        if i == 3:
             status_current = status_i
             print(supertrend_line_1, supertrend_line_2)
-        elif i == 3:
+        elif i == 5:
             status_before = status_i
             print(supertrend_line_1, supertrend_line_2)
 
