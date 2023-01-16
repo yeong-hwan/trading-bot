@@ -92,15 +92,15 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
             high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
         supertrend_line_2 = supertrend_2.iloc[-i][0]
 
-        status_i = get_state(candle_close_series[-i],
-                             supertrend_line_1, supertrend_line_2)
+        state_at_i = get_state(candle_close_series[-i],
+                            supertrend_line_1, supertrend_line_2)
 
         if i == 3:
-            state_current = status_i
-            print(supertrend_line_1, supertrend_line_2)
+            state_current = state_at_i
+            # print(supertrend_line_1, supertrend_line_2)
         elif i == 4:
-            state_before = status_i
-            print(supertrend_line_1, supertrend_line_2)
+            state_before = state_at_i
+            # print(supertrend_line_1, supertrend_line_2)
 
     state = [state_before, state_current]
 
