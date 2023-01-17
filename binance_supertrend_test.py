@@ -49,6 +49,7 @@ try:
         positioned_list = json.load(json_file)
 
 except Exception as e:
+    # line_alert.send_message("| Exception by First | Not Positioned")
     print("| Exception by First | Not Positioned")
 
 # line_alert.send_message("supertrend working")
@@ -64,7 +65,8 @@ try:
     top_coin_list = bf.get_top_coin_list(binance, coin_cnt)
 
     target_coin_list = top_coin_list
-    for positioned_ticker in positioned_list:
+    for positioned_ticker_data in positioned_list:
+        positioned_ticker = positioned_ticker_data[0]
         if positioned_ticker not in target_coin_list:
             target_coin_list.append(positioned_ticker)
 
@@ -119,6 +121,8 @@ try:
             supertrend_line_1_5m, supertrend_line_2_5m = 0, 0
             supertrend_line_1_4h, supertrend_line_2_4h = 0, 0
 
+            state = list()
+
             candle_5m = bf.get_ohlcv(
                 binance, ticker, '5m')
             time.sleep(0.02)
@@ -135,15 +139,15 @@ try:
                 continue
 
             elif ticker == "BTC/USDT":
-                # continue
-                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, status = bf.get_supertrend_cloud(
+                continue
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, state = bf.get_supertrend_cloud(
                     candle_5m, '5m', True)
                 # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h, status = bf.get_supertrend_cloud(
                 #     candle_4h, '4h', True)
 
             else:
                 # if ticker == "SOL/USDT":
-                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, status = bf.get_supertrend_cloud(
+                long_5m, short_5m, cloud_5m, supertrend_line_1_5m, supertrend_line_2_5m, state = bf.get_supertrend_cloud(
                     candle_5m, '5m')
 
                 # long_4h, short_4h, cloud_4h, supertrend_line_1_4h, supertrend_line_2_4h = bf.get_supertrend_cloud(
@@ -151,12 +155,32 @@ try:
                 # else:
                 #     continue
 
+            # ----- state -----
+            state_now = ""
+            state_before, state_current = state
+
+            if state_before == "cloud" and state_current == "cloud":
+                state_now = "Cloud"
+            elif state_before == "upside" and state_current == "upside":
+                state_now = "Long position"
+            elif state_before == "downside" and state_current == "downside":
+                state_now = "Short position"
+
+            if state_before == "cloud" and state_current == "upside":
+                state_now = "Crossover Out"
+            elif state_before == "cloud" and state_current == "downside":
+                state_now = "Crossunder Out"
+            elif state_before == "upside" and state_current == "cloud":
+                state_now = "Crossunder In"
+            elif state_before == "downside" and state_current == "cloud":
+                state_now = "Crossover In"
+
             # --------------
             boolean_list = [long_5m, short_5m,
                             cloud_5m, long_4h, short_4h, cloud_4h]
 
-            if True in boolean_list:
-                line_alert.send_message(f"{ticker} | {boolean_list[:3]}")
+            # if True in boolean_list:
+            #     line_alert.send_message(f"{ticker} | {boolean_list[:3]}")
 
             # --------------
 
@@ -172,7 +196,7 @@ try:
                 print("-------", "target_coin_ticker :",
                       target_coin_ticker, "-------\n|")
 
-                target_coin_symbol = ticker.replace("/", "")
+                target_coin_symbol = target_coin_ticker.replace("/", "")
                 time.sleep(0.05)
 
                 minimum_amount_tuple = bf.get_min_amount(
@@ -253,41 +277,50 @@ try:
                     time.sleep(0.1)
 
                 if True:
-
                     # ---------------------------------------------------------
 
-                    candle_close_current = candle_5m['close'][-2]
+                    candle_close_current = candle_5m['close'][-3]
 
                     supertrend_line_1_5m, supertrend_line_2_5m = round(
                         supertrend_line_1_5m, 4), round(supertrend_line_2_5m, 4)
                     # supertrend_line_1_4h, supertrend_line_2_4h = round(
                     #     supertrend_line_1_4h, 4), round(supertrend_line_2_4h, 4)
 
-                    report_message += f"\n{ticker_order}. {target_coin_ticker} Now : {candle_close_current}\n"
-                    report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
+                    price_list = [candle_close_current,
+                                  supertrend_line_1_5m, supertrend_line_2_5m]
+                    price_list.sort()
+
+                    report_message += f"\n{ticker_order}. {target_coin_ticker}\n"
+                    report_message += f"| {price_list[0]} / {price_list[1]} / {price_list[2]}\n"
                     # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
-                    report_message += f"| {status}"
+                    report_message += f"| {state_now}"
 
 # ----------------------- enter position -----------------------
 
                     # 5m
                     if long_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} 5m long position chance")
+                            f"{target_coin_ticker} | long position chance")
+
+                        # continue
 
                         time.sleep(0.1)
 
-                        params = {
-                            'positionSide': 'LONG'
-                        }
-                        long_order = binance.create_market_buy_order(
-                            target_coin_ticker, buy_amount, params)
+                        try:
+                            params = {
+                                'positionSide': 'LONG'
+                            }
+                            long_order = binance.create_market_buy_order(
+                                target_coin_ticker, buy_amount, params)
+                        except Exception as e:
+                            line_alert.send_message(e)
+                            continue
 
                         time.sleep(0.1)
 
-                        ticker_data = (ticker, "5m", "long",
-                                       buy_amount, coin_price)
+                        ticker_data = [target_coin_ticker, "5m", "long",
+                                       buy_amount, coin_price]
 
                         positioned_list.append(ticker_data)
 
@@ -296,66 +329,72 @@ try:
 
                     elif short_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} 5m short position chance")
+                            f"{target_coin_ticker} | short position chance")
+
+                        # continue
 
                         time.sleep(0.1)
 
-                        params = {
-                            'positionSide': 'SHORT'
-                        }
-                        short_order = binance.create_market_sell_order(
-                            target_coin_ticker, buy_amount, params)
+                        try:
+                            params = {
+                                'positionSide': 'SHORT'
+                            }
+                            short_order = binance.create_market_sell_order(
+                                target_coin_ticker, buy_amount, params)
+                        except Exception as e:
+                            line_alert.send_message(e)
+                            continue
 
                         time.sleep(0.1)
 
-                        ticker_data = (ticker, "5m", "short",
-                                       buy_amount, coin_price)
+                        ticker_data = [target_coin_ticker, "5m", "short",
+                                       buy_amount, coin_price]
 
                         positioned_list.append(ticker_data)
 
                         with open(positioned_file_path, 'w') as outfile:
                             json.dump(positioned_list, outfile)
 
-                    # 4h
-                    if long_4h:
-                        line_alert.send_message(
-                            f"{target_coin_ticker} 4h long position chance")
+                    # # 4h
+                    # if long_4h:
+                    #     line_alert.send_message(
+                    #         f"{target_coin_ticker} 4h long position chance")
 
-                        params = {
-                            'positionSide': 'LONG'
-                        }
-                        long_order = binance.create_market_buy_order(
-                            target_coin_ticker, buy_amount, params)
+                    #     params = {
+                    #         'positionSide': 'LONG'
+                    #     }
+                    #     long_order = binance.create_market_buy_order(
+                    #         target_coin_ticker, buy_amount, params)
 
-                        time.sleep(0.1)
+                    #     time.sleep(0.1)
 
-                        ticker_data = (ticker, "4h", "long",
-                                       buy_amount, coin_price)
+                    #     ticker_data = (target_coin_ticker, "4h", "long",
+                    #                    buy_amount, coin_price)
 
-                        positioned_list.append(ticker_data)
+                    #     positioned_list.append(ticker_data)
 
-                        with open(positioned_file_path, 'w') as outfile:
-                            json.dump(positioned_list, outfile)
+                    #     with open(positioned_file_path, 'w') as outfile:
+                    #         json.dump(positioned_list, outfile)
 
-                    elif short_4h:
-                        line_alert.send_message(
-                            f"{target_coin_ticker} 4h short position chance")
+                    # elif short_4h:
+                    #     line_alert.send_message(
+                    #         f"{target_coin_ticker} 4h short position chance")
 
-                        params = {
-                            'positionSide': 'SHORT'
-                        }
-                        short_order = binance.create_market_sell_order(
-                            target_coin_ticker, buy_amount, params)
+                    #     params = {
+                    #         'positionSide': 'SHORT'
+                    #     }
+                    #     short_order = binance.create_market_sell_order(
+                    #         target_coin_ticker, buy_amount, params)
 
-                        time.sleep(0.1)
+                    #     time.sleep(0.1)
 
-                        ticker_data = (ticker, "4h", "short",
-                                       buy_amount, coin_price)
+                    #     ticker_data = (target_coin_ticker, "4h", "short",
+                    #                    buy_amount, coin_price)
 
-                        positioned_list.append(ticker_data)
+                    #     positioned_list.append(ticker_data)
 
-                        with open(positioned_file_path, 'w') as outfile:
-                            json.dump(positioned_list, outfile)
+                    #     with open(positioned_file_path, 'w') as outfile:
+                    #         json.dump(positioned_list, outfile)
 
 # -----------------------------------------------------------------
                     ticker_name = ""
@@ -365,30 +404,28 @@ try:
                     positioned_amt_5m = 0
                     positioned_coin_price_5m = 0
 
-                    candle_period_4h = ""
-                    position_side_4h = ""
-                    positioned_amt_4h = 0
-                    positioned_coin_price_4h = 0
+                    # candle_period_4h = ""
+                    # position_side_4h = ""
+                    # positioned_amt_4h = 0
+                    # positioned_coin_price_4h = 0
 
                     for position_data in positioned_list:
-                        ticker_name = position_data[0]
-                        candle_data = position_data[1]
-                        position_side_data = position_data[2]
-                        buy_amt_data = position_data[3]
-                        coin_price_data = position_data[4]
+                        ticker_name, candle_data, position_side_data, buy_amt_data, coin_price_data = position_data
 
-                        if ticker_name == ticker and candle_data == "5m":
+                        if ticker_name == target_coin_ticker and candle_data == "5m":
                             candle_period_5m = candle_data
                             position_side_5m = position_side_data
                             positioned_amt_5m = buy_amt_data
                             positioned_coin_price_5m = coin_price_data
 
-                        if ticker_name == ticker and candle_data == "4h":
-                            candle_period_4h = candle_data
-                            position_side_4h = position_side_data
-                            positioned_amt_4h = buy_amt_data
-                            positioned_coin_price_4h = coin_price_data
+                        # if ticker_name == ticker and candle_data == "4h":
+                        #     candle_period_4h = candle_data
+                        #     position_side_4h = position_side_data
+                        #     positioned_amt_4h = buy_amt_data
+                        #     positioned_coin_price_4h = coin_price_data
 
+                        ticker_data_5m = (
+                            candle_period_5m, position_side_5m, positioned_amt_5m, positioned_coin_price_5m)
 # -----------------------------------------------------------------
 
 #
@@ -397,25 +434,40 @@ try:
 
 # -----------------------  exit position -----------------------
                         # 5m
-                        if cloud_5m:
+                        if (cloud_5m and ticker_name == target_coin_ticker):
                             line_alert.send_message(
-                                f"{target_coin_ticker} 5m close position")
+                                f"{target_coin_ticker} | close position")
+
+                            # line_alert.send_message(
+                            #     f"{ticker_data_5m}")
 
                             if position_side_5m == "long":
                                 params = {
                                     'positionSide': 'LONG'
                                 }
-                                binance.create_market_sell_order(
+                                close_long = binance.create_market_sell_order(
                                     target_coin_ticker, positioned_amt_5m, params)
+
+                                # line_alert.send_message(
+                                #     f"\nclose_long\n{close_long}")
 
                             if position_side_5m == "short":
                                 params = {
                                     'positionSide': 'SHORT'
                                 }
-                                binance.create_market_buy_order(
+                                close_short = binance.create_market_buy_order(
                                     target_coin_ticker, positioned_amt_5m, params)
 
+                                # line_alert.send_message(
+                                #     f"\nclose_short\n{close_short}")
+
+                            line_alert.send_message(
+                                f"positioned_list before : {positioned_list}")
+
                             positioned_list.remove(position_data)
+
+                            line_alert.send_message(
+                                f"positioned_list after : {positioned_list}")
 
                             with open(positioned_file_path, 'w') as outfile:
                                 json.dump(positioned_list, outfile)
@@ -423,7 +475,7 @@ try:
                         # 4h
                         if cloud_4h:
                             line_alert.send_message(
-                                f"{target_coin_ticker} 4h close position")
+                                f"{target_coin_ticker} | close position")
 
                             if position_side_4h == "long":
                                 params = {

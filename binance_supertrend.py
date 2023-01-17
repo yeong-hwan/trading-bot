@@ -49,7 +49,7 @@ try:
         positioned_list = json.load(json_file)
 
 except Exception as e:
-    line_alert.send_message("| Exception by First | Not Positioned")
+    # line_alert.send_message("| Exception by First | Not Positioned")
     print("| Exception by First | Not Positioned")
 
 # line_alert.send_message("supertrend working")
@@ -160,27 +160,27 @@ try:
             state_before, state_current = state
 
             if state_before == "cloud" and state_current == "cloud":
-                state_now = "Stable(cloud)"
+                state_now = "Cloud"
             elif state_before == "upside" and state_current == "upside":
-                state_now = "Long position"
+                state_now = "Long"
             elif state_before == "downside" and state_current == "downside":
-                state_now = "Short position"
+                state_now = "Short"
 
             if state_before == "cloud" and state_current == "upside":
-                state_now = "crossover out"
+                state_now = "Crossover Out"
             elif state_before == "cloud" and state_current == "downside":
-                state_now = "crossunder out"
+                state_now = "Crossunder Out"
             elif state_before == "upside" and state_current == "cloud":
-                state_now = "crossunder in"
+                state_now = "Crossunder In"
             elif state_before == "downside" and state_current == "cloud":
-                state_now = "crossover in"
+                state_now = "Crossover In"
 
             # --------------
             boolean_list = [long_5m, short_5m,
                             cloud_5m, long_4h, short_4h, cloud_4h]
 
-            if True in boolean_list:
-                line_alert.send_message(f"{ticker} | {boolean_list[:3]}")
+            # if True in boolean_list:
+            #     line_alert.send_message(f"{ticker} | {boolean_list[:3]}")
 
             # --------------
 
@@ -286,8 +286,12 @@ try:
                     # supertrend_line_1_4h, supertrend_line_2_4h = round(
                     #     supertrend_line_1_4h, 4), round(supertrend_line_2_4h, 4)
 
-                    report_message += f"\n{ticker_order}. {target_coin_ticker} Now : {candle_close_current}\n"
-                    report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
+                    price_list = [candle_close_current,
+                                  supertrend_line_1_5m, supertrend_line_2_5m]
+                    price_list.sort()
+
+                    report_message += f"\n{ticker_order}. {target_coin_ticker}\n"
+                    report_message += f"| {price_list[0]} / {price_list[1]} / {price_list[2]}\n"
                     # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
                     report_message += f"| {state_now}"
@@ -400,17 +404,13 @@ try:
                     positioned_amt_5m = 0
                     positioned_coin_price_5m = 0
 
-                    candle_period_4h = ""
-                    position_side_4h = ""
-                    positioned_amt_4h = 0
-                    positioned_coin_price_4h = 0
+                    # candle_period_4h = ""
+                    # position_side_4h = ""
+                    # positioned_amt_4h = 0
+                    # positioned_coin_price_4h = 0
 
                     for position_data in positioned_list:
-                        ticker_name = position_data[0]
-                        candle_data = position_data[1]
-                        position_side_data = position_data[2]
-                        buy_amt_data = position_data[3]
-                        coin_price_data = position_data[4]
+                        ticker_name, candle_data, position_side_data, buy_amt_data, coin_price_data = position_data
 
                         if ticker_name == target_coin_ticker and candle_data == "5m":
                             candle_period_5m = candle_data
