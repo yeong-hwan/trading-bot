@@ -59,13 +59,14 @@ try:
     #
     # ------------------ setting options ----------------------
     invest_rate = 1
-    set_leverage = 5
+    set_leverage = 3
 
     coin_cnt = 10
     top_coin_list = bf.get_top_coin_list(binance, coin_cnt)
 
     target_coin_list = top_coin_list
-    for positioned_ticker in positioned_list:
+    for positioned_ticker_data in positioned_list:
+        positioned_ticker = positioned_ticker_data[0]
         if positioned_ticker not in target_coin_list:
             target_coin_list.append(positioned_ticker)
 
@@ -120,6 +121,8 @@ try:
             supertrend_line_1_5m, supertrend_line_2_5m = 0, 0
             supertrend_line_1_4h, supertrend_line_2_4h = 0, 0
 
+            state = list()
+
             candle_5m = bf.get_ohlcv(
                 binance, ticker, '5m')
             time.sleep(0.02)
@@ -151,6 +154,26 @@ try:
                 #     candle_4h, '4h')
                 # else:
                 #     continue
+
+            # ----- state -----
+            state_now = ""
+            state_before, state_current = state
+
+            if state_before == "cloud" and state_current == "cloud":
+                state_now = "Stable(cloud)"
+            elif state_before == "upside" and state_current == "upside":
+                state_now = "Long position"
+            elif state_before == "downside" and state_current == "downside":
+                state_now = "Short position"
+
+            if state_before == "cloud" and state_current == "upside":
+                state_now = "crossover out"
+            elif state_before == "cloud" and state_current == "downside":
+                state_now = "crossunder out"
+            elif state_before == "upside" and state_current == "cloud":
+                state_now = "crossunder in"
+            elif state_before == "downside" and state_current == "cloud":
+                state_now = "crossover in"
 
             # --------------
             boolean_list = [long_5m, short_5m,
@@ -267,14 +290,14 @@ try:
                     report_message += f"| 5m  St1 : {supertrend_line_1_5m} St2 : {supertrend_line_2_5m}\n"
                     # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
-                    report_message += f"| {state}"
+                    report_message += f"| {state_now}"
 
 # ----------------------- enter position -----------------------
 
                     # 5m
                     if long_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} 5m long position chance")
+                            f"{target_coin_ticker} | long position chance")
 
                         # continue
 
@@ -302,7 +325,7 @@ try:
 
                     elif short_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} 5m short position chance")
+                            f"{target_coin_ticker} | short position chance")
 
                         # continue
 
@@ -413,7 +436,7 @@ try:
                         # 5m
                         if (cloud_5m and ticker_name == target_coin_ticker):
                             line_alert.send_message(
-                                f"{target_coin_ticker} 5m close position")
+                                f"{target_coin_ticker} | close position")
 
                             # line_alert.send_message(
                             #     f"{ticker_data_5m}")
@@ -452,7 +475,7 @@ try:
                         # 4h
                         if cloud_4h:
                             line_alert.send_message(
-                                f"{target_coin_ticker} 4h close position")
+                                f"{target_coin_ticker} | close position")
 
                             if position_side_4h == "long":
                                 params = {
