@@ -301,7 +301,7 @@ try:
                     # 5m
                     if long_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} | long position chance")
+                            f"! {target_coin_ticker} | long position chance")
 
                         # continue
 
@@ -329,7 +329,7 @@ try:
 
                     elif short_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} | short position chance")
+                            f"! {target_coin_ticker} | short position chance")
 
                         # continue
 
@@ -436,7 +436,7 @@ try:
                         # 5m
                         if (cloud_5m and ticker_name == target_coin_ticker):
                             line_alert.send_message(
-                                f"{target_coin_ticker} | close position")
+                                f"! {target_coin_ticker} | close position")
 
                             # line_alert.send_message(
                             #     f"{ticker_data_5m}")
@@ -473,28 +473,28 @@ try:
                                 json.dump(positioned_list, outfile)
 
                         # 4h
-                        if cloud_4h:
-                            line_alert.send_message(
-                                f"{target_coin_ticker} | close position")
+                        # if cloud_4h:
+                        #     line_alert.send_message(
+                        #         f"{target_coin_ticker} | close position")
 
-                            if position_side_4h == "long":
-                                params = {
-                                    'positionSide': 'LONG'
-                                }
-                                binance.create_market_sell_order(
-                                    target_coin_ticker, positioned_amt_4h, params)
+                        #     if position_side_4h == "long":
+                        #         params = {
+                        #             'positionSide': 'LONG'
+                        #         }
+                        #         binance.create_market_sell_order(
+                        #             target_coin_ticker, positioned_amt_4h, params)
 
-                            if position_side_4h == "short":
-                                params = {
-                                    'positionSide': 'SHORT'
-                                }
-                                binance.create_market_buy_order(
-                                    target_coin_ticker, positioned_amt_4h, params)
+                        #     if position_side_4h == "short":
+                        #         params = {
+                        #             'positionSide': 'SHORT'
+                        #         }
+                        #         binance.create_market_buy_order(
+                        #             target_coin_ticker, positioned_amt_4h, params)
 
-                            positioned_list.remove(position_data)
+                        #     positioned_list.remove(position_data)
 
-                            with open(positioned_file_path, 'w') as outfile:
-                                json.dump(positioned_list, outfile)
+                        #     with open(positioned_file_path, 'w') as outfile:
+                        #         json.dump(positioned_list, outfile)
 
             print("--------------------------------------------\n\n")
 

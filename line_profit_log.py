@@ -71,10 +71,11 @@ message_status += "--------------------------------------\n"
 # message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
 
 exchange_rate = bf.get_usd_krw()
-total_money_usd = float(balance['USDT']['total'])
-total_money_krw = total_money_usd * exchange_rate
+total_money_usd = round(float(balance['USDT']['total']), 3)
+total_money_krw = round(total_money_usd * exchange_rate, 3)
 used_money = float(balance['USDT']['used'])
 free_money = float(balance['USDT']['free'])
+
 total_usd = format(total_money_usd, ',')
 total_krw = format(total_money_krw, ',')
 
@@ -89,6 +90,7 @@ day = time_info.tm_mday
 
 
 try:
+
     json_info = f"\n{year}.{month}.{day}\nUSD : {total_usd} $\nKRW : {total_krw} ₩\n"
 
     profit_log_list = list()
@@ -103,6 +105,9 @@ try:
         print(f"Exception: {e}")
 
     profit_log_list.append(json_info)
+
+    if len(profit_log_list) > 7:
+        profit_log_list.pop(0)
 
     with open(profit_log_file_path, 'w') as json_file:
         json.dump(profit_log_list, json_file)
