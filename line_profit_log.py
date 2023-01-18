@@ -24,23 +24,15 @@ binance = ccxt.binance(config={
 })
 
 balance = binance.fetch_balance(params={"type": "future"})
-
 tickers = binance.fetch_tickers()
 
-message_status = ""
-
-# print("---------------------------------------------")
-# message_status += "\n\n--------------------------------------\n"
-
 # ------------------ setting options ----------------------
-set_leverage = 3
-
 time.sleep(0.1)
 
+# -------------- time monitor ---------------------
 
-# if want to execute bot, server time = set time - 9
+# # if want to execute bot, server time = set time - 9
 time_info = time.gmtime()
-
 hour_server = time_info.tm_hour
 minute = time_info.tm_min
 
@@ -59,16 +51,11 @@ if hour_kst >= 12:
     else:
         mid_day_kst = "PM"
 
-print("\n---------------------------------------------\n|")
-message_status += "--------------------------------------\n"
+year = time_info.tm_year
+month = time_info.tm_mon
+day = time_info.tm_mday
 
-# print(f"| Server time | {hour_server} {mid_day_server} : {minute}")
-# print(f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|")
-# message_status += f"|\n| Server time | {hour_server} {mid_day_server} : {minute}\n"
-# message_status += f"| KST (UTC+9) | {hour_kst} {mid_day_kst} : {minute}\n|\n"
-
-# print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
-# message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
+# ---------------------------------------------------
 
 exchange_rate = bf.get_usd_krw()
 total_money_usd = round(float(balance['USDT']['total']), 3)
@@ -80,21 +67,16 @@ total_usd = format(total_money_usd, ',')
 total_krw = format(total_money_krw, ',')
 
 
-print("---------------------------------------------\n")
-message_status += "--------------------------------------\n"
-
-# -------------- time monitor ---------------------
-year = time_info.tm_year
-month = time_info.tm_mon
-day = time_info.tm_mday
-
-
 try:
 
     json_info = f"\n{year}.{month}.{day}\nUSD : {total_usd} $\nKRW : {total_krw} ₩\n"
 
     profit_log_list = list()
+
+    # server
     profit_log_file_path = "/var/trading-bot/profit_log.json"
+
+    # local
     # profit_log_file_path = "profit_log.json"
 
     try:
@@ -117,9 +99,6 @@ try:
         line_profit_message += log
 
     line_alert.send_message(line_profit_message)
-
-    # if mid_day_kst == "PM" and minute == 0 and hour_kst == 1:
-    # line_alert.send_message(line_profit_message)
 
 
 except Exception as e:

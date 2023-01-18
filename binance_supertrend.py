@@ -43,6 +43,7 @@ positioned_file_path = "/var/trading-bot/positioned_list.json"
 # local
 # positioned_file_path = "positioned_list.json"
 
+# ----------------------------------------------------
 
 try:
     with open(positioned_file_path, 'r') as json_file:
@@ -50,9 +51,7 @@ try:
 
 except Exception as e:
     # line_alert.send_message("| Exception by First | Not Positioned")
-    print("| Exception by First | Not Positioned")
-
-# line_alert.send_message("supertrend working")
+    print("\n| Exception by First | Not Positioned\n")
 
 try:
     #
@@ -73,37 +72,6 @@ try:
     time.sleep(0.1)
     # ---------------------------------------------------------
 
-    #
-    #
-    #
-
-    # -------------- time monitor ---------------------
-    # print(time_info)
-
-    # if want to execute bot, server time = set time - 9
-    time_info = time.gmtime()
-    hour_server = time_info.tm_hour
-    minute = time_info.tm_min
-
-    mid_day_server = "AM"
-    if hour_server >= 12:
-        hour_server -= 12
-        mid_day_server = "PM"
-
-    hour_kst = hour_server + 9
-
-    mid_day_kst = mid_day_server
-    if hour_kst >= 12:
-        hour_kst -= 12
-        if mid_day_server == "PM":
-            mid_day_kst = "AM"
-        else:
-            mid_day_kst = "PM"
-
-    #
-    # time monitor not used
-    #
-
     # ------------------ banned ticker list --------------
     banned_ticker_list = ["SRM/USDT", "FTT/USDT"]
 
@@ -116,10 +84,10 @@ try:
         if "/USDT" in ticker:
 
             long_5m, short_5m, cloud_5m = False, False, False
-            long_4h, short_4h, cloud_4h = False, False, False
+            # long_4h, short_4h, cloud_4h = False, False, False
 
             supertrend_line_1_5m, supertrend_line_2_5m = 0, 0
-            supertrend_line_1_4h, supertrend_line_2_4h = 0, 0
+            # supertrend_line_1_4h, supertrend_line_2_4h = 0, 0
 
             state = list()
 
@@ -127,9 +95,9 @@ try:
                 binance, ticker, '5m')
             time.sleep(0.02)
 
-            candle_4h = bf.get_ohlcv(
-                binance, ticker, '4h')
-            time.sleep(0.02)
+            # candle_4h = bf.get_ohlcv(
+            #     binance, ticker, '4h')
+            # time.sleep(0.02)
 
         # get supertrend cloud
         # continue skip current ticker
@@ -175,14 +143,7 @@ try:
             elif state_before == "downside" and state_current == "cloud":
                 state_now = "Crossover In"
 
-            # --------------
-            boolean_list = [long_5m, short_5m,
-                            cloud_5m, long_4h, short_4h, cloud_4h]
-
-            # if True in boolean_list:
-            #     line_alert.send_message(f"{ticker} | {boolean_list[:3]}")
-
-            # --------------
+            boolean_list = [long_5m, short_5m, cloud_5m]
 
 # ----------------------------------------------
 
@@ -193,7 +154,7 @@ try:
                 message_ticker = ""
 
                 print(f"{ticker_order}.")
-                print("-------", "target_coin_ticker :",
+                print("┍------", "target_coin_ticker :",
                       target_coin_ticker, "-------\n|")
 
                 target_coin_symbol = target_coin_ticker.replace("/", "")
@@ -209,16 +170,6 @@ try:
 
                 coin_price = bf.get_coin_current_price(
                     binance, target_coin_ticker)
-                # max_amount = 0
-
-                # try:
-                #     max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
-                #         float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
-                # # adjust max_amount when 0
-                # except Exception as e:
-                #     pass
-                # if max_amount == 0:
-                #     max_amount = minimum_amount * 5
 
                 total_money_usd = float(balance['USDT']['total'])
                 budget_for_current_ticker = total_money_usd / 10
@@ -231,14 +182,13 @@ try:
 
                 # round amounts
                 minimum_amount = round(minimum_amount, 5)
-                # max_amount = round(max_amount, 5)
                 expected_budget = round(expected_budget, 5)
                 buy_amount = round(buy_amount, 5)
 
-                print(f"| min_amount : {minimum_amount} EA")
-                # print(f"| max_amount : {max_amount} EA")
-                print(f"| expected_budget : {expected_budget} $")
-                print(f"| buy_amount : {buy_amount} EA")
+                print(f"| Min_amount : {minimum_amount} EA")
+                print(f"| Input_budget : {expected_budget} $")
+                print(f"| Buy_amount : {buy_amount} EA")
+                print("|")
 
                 amt_long, amt_short = 0, 0
                 entry_price_long, entry_price_short = 0, 0
@@ -275,9 +225,14 @@ try:
                         {'symbol': target_coin_symbol, 'marginType': 'ISOLATED'}))
 
                     time.sleep(0.1)
+                # ---------------------------------------------------------
 
+                #
+                #
+                #
+
+                # ---------------------------------------------------------
                 if True:
-                    # ---------------------------------------------------------
 
                     candle_close_current = candle_5m['close'][-3]
 
@@ -292,9 +247,6 @@ try:
 
                     report_message += f"\n{ticker_order}. {target_coin_ticker} : {state_now}\n"
                     report_message += f"| {price_list[0]} / {price_list[1]} / {price_list[2]}\n"
-                    # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
-
-                    # report_message += f"| {state_now}"
 
 # ----------------------- enter position -----------------------
 
@@ -438,18 +390,12 @@ try:
                             line_alert.send_message(
                                 f"\n※ {target_coin_ticker} | Close position")
 
-                            # line_alert.send_message(
-                            #     f"{ticker_data_5m}")
-
                             if position_side_5m == "long":
                                 params = {
                                     'positionSide': 'LONG'
                                 }
                                 close_long = binance.create_market_sell_order(
                                     target_coin_ticker, positioned_amt_5m, params)
-
-                                # line_alert.send_message(
-                                #     f"\nclose_long\n{close_long}")
 
                             if position_side_5m == "short":
                                 params = {
@@ -458,16 +404,7 @@ try:
                                 close_short = binance.create_market_buy_order(
                                     target_coin_ticker, positioned_amt_5m, params)
 
-                                # line_alert.send_message(
-                                #     f"\nclose_short\n{close_short}")
-
-                            line_alert.send_message(
-                                f"positioned_list before : {positioned_list}")
-
                             positioned_list.remove(position_data)
-
-                            line_alert.send_message(
-                                f"positioned_list after : {positioned_list}")
 
                             with open(positioned_file_path, 'w') as outfile:
                                 json.dump(positioned_list, outfile)
@@ -496,7 +433,7 @@ try:
                         #     with open(positioned_file_path, 'w') as outfile:
                         #         json.dump(positioned_list, outfile)
 
-            print("--------------------------------------------\n\n")
+            print("┕-------------------------------------------\n")
 
             ticker_order += 1
 

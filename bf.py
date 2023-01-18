@@ -1,3 +1,4 @@
+# ------- library --------
 import pandas as pd
 import time
 import pprint
@@ -18,7 +19,21 @@ standard_date
     -2: yesterday / before
 '''
 
-# ----------------------- supertrend functions ----------------------------
+# ------------------------------------------------------------------------
+
+# Contents
+# 1. Supertrend functions
+# 2. Variables setting
+# 3. Binance functions
+# 4. Balance functions
+
+# ------------------------------------------------------------------------
+
+#
+#
+#
+
+# ----------------------- Supertrend functions ---------------------------
 
 
 def get_cross_over(candle_close_current, candle_close_before, supertrend_line):
@@ -67,7 +82,14 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
 
     long_condition, short_condition, cloud_condition = False, False, False
 
-    # ---------------- variables setting --------------------
+# ------------------------------------------------------------------------
+
+#
+#
+#
+
+# -------------------------- Variables setting ---------------------------
+
     if candle_type == "5m":
         period_1, multi_1, period_2, multi_2 = 6, 10, 10, 6
 
@@ -77,10 +99,10 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
     elif candle_type == "4h":
         period_1, multi_1, period_2, multi_2 = 10, 3, 10, 6
 
-    # -2
+    # -3
     state_current = ""
 
-    # -3
+    # -4
     state_before = ""
 
     for i in range(3, 5):
@@ -97,10 +119,8 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
 
         if i == 3:
             state_current = state_at_i
-            # print(supertrend_line_1, supertrend_line_2)
         elif i == 4:
             state_before = state_at_i
-            # print(supertrend_line_1, supertrend_line_2)
 
     state = [state_before, state_current]
 
@@ -115,7 +135,14 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
             cloud_condition = True
 
     return long_condition, short_condition, cloud_condition, supertrend_line_1, supertrend_line_2, state
-# ------------------ binance functions ---------------------
+
+# ---------------------------------------------------------------------------
+
+#
+#
+#
+
+# ----------------------- Binance functions ---------------------------------
 
 # period: (1d,4h,1h,15m,10m,1m ...)
 
@@ -150,8 +177,14 @@ def get_coin_current_price(binance, ticker):
 
     return coin_price
 
+# ------------------------------------------------------------------------
 
-# ------------------ balance functions ----------------------
+#
+#
+#
+
+# ------------------------ Balance functions -----------------------------
+
 
 def get_usd_krw():
     headers = {
@@ -165,14 +198,11 @@ def get_top_coin_list(binance, top):
 
     tickers = binance.fetch_tickers()
     dic_coin_money = dict()
-    # pprint.pprint(tickers)
 
     for ticker in tickers:
 
         try:
             if "/USDT" in ticker:
-                # print(ticker, "----- \n",
-                #   tickers[ticker]['baseVolume'] * tickers[ticker]['close'])
 
                 dic_coin_money[ticker] = tickers[ticker]['baseVolume'] * \
                     tickers[ticker]['close']
@@ -186,7 +216,6 @@ def get_top_coin_list(binance, top):
     coin_list = list()
     cnt = 0
     for coin_data in dic_sorted_coin_money:
-        # print("####-------------", coin_data[0], coin_data[1])
         cnt += 1
         if cnt <= top:
             coin_list.append(coin_data[0])

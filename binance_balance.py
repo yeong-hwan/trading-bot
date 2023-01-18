@@ -11,7 +11,6 @@ import line_alert
 import traceback
 import schedule
 
-
 # ---------- key decoding ---------------
 simple_en_decrypt = original_key.simple_en_decrypt(encrypt_key.encrypt_key)
 binance_access = simple_en_decrypt.decrypt(original_key.access)
@@ -27,21 +26,12 @@ binance = ccxt.binance(config={
 })
 
 balance = binance.fetch_balance(params={"type": "future"})
-
 tickers = binance.fetch_tickers()
+# ---------------------------------------------------
 
-
-message_status = ""
-
-# print("---------------------------------------------")
-# message_status += "\n\n--------------------------------------\n"
-
-# ------------------ setting options ----------------------=
 time.sleep(0.1)
 
-
-print("\n---------------------------------------------\n|")
-message_status += "--------------------------------------\n"
+print("\n┍--------------------------------------------\n|")
 
 
 exchange_rate = bf.get_usd_krw()
@@ -59,26 +49,7 @@ print("| Positioned :", used_money, "$")
 print("| Remainder :", free_money, "$", "\n|")
 
 
-# print("| -  -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|")
-# message_status += "| -  -  -  -  -  -  -  -  -  -  -  -  -  -\n|\n"
+print("┕--------------------------------------------\n")
 
-# print("| Leverage :", set_leverage, "\n|")
-# message_status += f"| Leverage : {set_leverage}\n|\n"
-
-print("---------------------------------------------\n")
-message_status += "--------------------------------------\n"
-
-print("Top Coin List\n", bf.get_top_coin_list(binance, 10), "\n")
-
-
-# try:
-#     bf.run_bot()
-
-#     schedule.every(10).seconds.do(run_bot)
-
-#     while True:
-#         schedule.run_pending()
-#         time.sleep(1)
-
-# except Exception as e:
-#     line_alert.send_message(str(e))
+print("[ Top Coin List ]")
+print("|", "\n| ".join(bf.get_top_coin_list(binance, 10)), "\n")

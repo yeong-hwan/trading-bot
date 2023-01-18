@@ -160,11 +160,11 @@ try:
             state_before, state_current = state
 
             if state_before == "cloud" and state_current == "cloud":
-                state_now = "Cloud"
+                state_now = "C"
             elif state_before == "upside" and state_current == "upside":
-                state_now = "Long position"
+                state_now = "L"
             elif state_before == "downside" and state_current == "downside":
-                state_now = "Short position"
+                state_now = "S"
 
             if state_before == "cloud" and state_current == "upside":
                 state_now = "Crossover Out"
@@ -209,16 +209,16 @@ try:
 
                 coin_price = bf.get_coin_current_price(
                     binance, target_coin_ticker)
-                max_amount = 0
+                # max_amount = 0
 
-                try:
-                    max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
-                        float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
-                # adjust max_amount when 0
-                except Exception as e:
-                    pass
-                if max_amount == 0:
-                    max_amount = minimum_amount * 5
+                # try:
+                #     max_amount = float(binance.amount_to_precision(target_coin_ticker, bf.get_amount(
+                #         float(balance['USDT']['total']), coin_price, invest_rate / coin_cnt))) * set_leverage
+                # # adjust max_amount when 0
+                # except Exception as e:
+                #     pass
+                # if max_amount == 0:
+                #     max_amount = minimum_amount * 5
 
                 total_money_usd = float(balance['USDT']['total'])
                 budget_for_current_ticker = total_money_usd / 10
@@ -290,18 +290,19 @@ try:
                                   supertrend_line_1_5m, supertrend_line_2_5m]
                     price_list.sort()
 
-                    report_message += f"\n{ticker_order}. {target_coin_ticker}\n"
+                    report_message += f"\n{ticker_order}. {target_coin_ticker} : {state_now}\n"
                     report_message += f"| {price_list[0]} / {price_list[1]} / {price_list[2]}\n"
+                    # report_message += f"| {buy_amount}"
                     # report_message += f"| 4h  St1 : {supertrend_line_1_4h} St2 : {supertrend_line_2_4h}\n"
 
-                    report_message += f"| {state_now}"
+                    # report_message += f"| {state_now}"
 
 # ----------------------- enter position -----------------------
 
                     # 5m
                     if long_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} | long position chance")
+                            f"\n※ {target_coin_ticker} | Long position")
 
                         # continue
 
@@ -329,7 +330,7 @@ try:
 
                     elif short_5m:
                         line_alert.send_message(
-                            f"{target_coin_ticker} | short position chance")
+                            f"\n※ {target_coin_ticker} | Short position")
 
                         # continue
 
@@ -436,7 +437,7 @@ try:
                         # 5m
                         if (cloud_5m and ticker_name == target_coin_ticker):
                             line_alert.send_message(
-                                f"{target_coin_ticker} | close position")
+                                f"\n※ {target_coin_ticker} | Close position")
 
                             # line_alert.send_message(
                             #     f"{ticker_data_5m}")
@@ -473,28 +474,28 @@ try:
                                 json.dump(positioned_list, outfile)
 
                         # 4h
-                        if cloud_4h:
-                            line_alert.send_message(
-                                f"{target_coin_ticker} | close position")
+                        # if cloud_4h:
+                        #     line_alert.send_message(
+                        #         f"{target_coin_ticker} | close position")
 
-                            if position_side_4h == "long":
-                                params = {
-                                    'positionSide': 'LONG'
-                                }
-                                binance.create_market_sell_order(
-                                    target_coin_ticker, positioned_amt_4h, params)
+                        #     if position_side_4h == "long":
+                        #         params = {
+                        #             'positionSide': 'LONG'
+                        #         }
+                        #         binance.create_market_sell_order(
+                        #             target_coin_ticker, positioned_amt_4h, params)
 
-                            if position_side_4h == "short":
-                                params = {
-                                    'positionSide': 'SHORT'
-                                }
-                                binance.create_market_buy_order(
-                                    target_coin_ticker, positioned_amt_4h, params)
+                        #     if position_side_4h == "short":
+                        #         params = {
+                        #             'positionSide': 'SHORT'
+                        #         }
+                        #         binance.create_market_buy_order(
+                        #             target_coin_ticker, positioned_amt_4h, params)
 
-                            positioned_list.remove(position_data)
+                        #     positioned_list.remove(position_data)
 
-                            with open(positioned_file_path, 'w') as outfile:
-                                json.dump(positioned_list, outfile)
+                        #     with open(positioned_file_path, 'w') as outfile:
+                        #         json.dump(positioned_list, outfile)
 
             print("--------------------------------------------\n\n")
 
