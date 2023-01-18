@@ -23,9 +23,8 @@ standard_date
 
 # Contents
 # 1. Supertrend functions
-# 2. Variables setting
-# 3. Binance functions
-# 4. Balance functions
+# 2. Binance functions
+# 3. Balance functions
 
 # ------------------------------------------------------------------------
 
@@ -54,7 +53,7 @@ def get_cross_under(candle_close_current, candle_close_before, supertrend_line):
     return cross_under_check
 
 
-def get_state(candle_close_current, st_1, st_2):
+def get_side(candle_close_current, st_1, st_2):
     result = ""
 
     if ((candle_close_current < st_1) & (candle_close_current > st_2)) or ((candle_close_current > st_1) & (candle_close_current < st_2)):
@@ -67,6 +66,33 @@ def get_state(candle_close_current, st_1, st_2):
         result = "downside"
 
     return result
+
+
+def get_state(state_before, state_current):
+    state_now = ""
+
+    if state_before == "cloud" and state_current == "cloud":
+        state_now = "C"
+    elif state_before == "upside" and state_current == "upside":
+        state_now = "L"
+    elif state_before == "downside" and state_current == "downside":
+        state_now = "S"
+
+    if state_before == "cloud" and state_current == "upside":
+        state_now = "Crossover Out"
+    elif state_before == "cloud" and state_current == "downside":
+        state_now = "Crossunder Out"
+    elif state_before == "upside" and state_current == "cloud":
+        state_now = "Crossunder In"
+    elif state_before == "downside" and state_current == "cloud":
+        state_now = "Crossover In"
+
+    if state_before == "upside" and state_current == "downside":
+        state_now = "Big Short"
+    elif state_before == "downside" and state_current == "upside":
+        state_now = "Big Long"
+
+    return state_now
 
 
 def get_supertrend_cloud(candle, candle_type, btc=False):
@@ -82,14 +108,7 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
 
     long_condition, short_condition, cloud_condition = False, False, False
 
-# ------------------------------------------------------------------------
-
-#
-#
-#
-
-# -------------------------- Variables setting ---------------------------
-
+    # variable setting
     if candle_type == "5m":
         period_1, multi_1, period_2, multi_2 = 6, 10, 10, 6
 
@@ -114,25 +133,31 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
             high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
         supertrend_line_2 = supertrend_2.iloc[-i][0]
 
-        state_at_i = get_state(candle_close_series[-i],
-                               supertrend_line_1, supertrend_line_2)
+        state_at_i = get_side(candle_close_series[-i],
+                              supertrend_line_1, supertrend_line_2)
 
         if i == 3:
             state_current = state_at_i
         elif i == 4:
             state_before = state_at_i
 
-    state = [state_before, state_current]
+    state = get_state(state_before, state_current)
 
-    if state_before == "cloud":
-        if state_current == "upside":
+    if state[-2:] == "In":
+        cloud_condition = True
+    elif state == "Crossover Out":
+        long_condition = True
+    elif state == "Crossunder Out":
+        short_condition = True
+
+    elif state[:3] == "Big":
+        cloud_condition = True
+        position_side = state[4:]
+
+        if position_side == "Long":
             long_condition = True
-        elif state_current == "downside":
+        elif position_side == "Short":
             short_condition = True
-
-    else:
-        if state_current == "cloud":
-            cloud_condition = True
 
     return long_condition, short_condition, cloud_condition, supertrend_line_1, supertrend_line_2, state
 

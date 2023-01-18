@@ -5,6 +5,6 @@
 
 # print(result[2:9])
 
-m_l = [1, 2]
-a, b = m_l
-print(a, b)
+state_now = "big short"
+big = state_now[4:]
+print(big)

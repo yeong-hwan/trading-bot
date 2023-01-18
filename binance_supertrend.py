@@ -89,8 +89,6 @@ try:
             supertrend_line_1_5m, supertrend_line_2_5m = 0, 0
             # supertrend_line_1_4h, supertrend_line_2_4h = 0, 0
 
-            state = list()
-
             candle_5m = bf.get_ohlcv(
                 binance, ticker, '5m')
             time.sleep(0.02)
@@ -101,6 +99,8 @@ try:
 
         # get supertrend cloud
         # continue skip current ticker
+
+            state = ""
 
             # exception for banned_ticker_list
             if ticker in banned_ticker_list:
@@ -122,26 +122,6 @@ try:
                 #     candle_4h, '4h')
                 # else:
                 #     continue
-
-            # ----- state -----
-            state_now = ""
-            state_before, state_current = state
-
-            if state_before == "cloud" and state_current == "cloud":
-                state_now = "C"
-            elif state_before == "upside" and state_current == "upside":
-                state_now = "L"
-            elif state_before == "downside" and state_current == "downside":
-                state_now = "S"
-
-            if state_before == "cloud" and state_current == "upside":
-                state_now = "Crossover Out"
-            elif state_before == "cloud" and state_current == "downside":
-                state_now = "Crossunder Out"
-            elif state_before == "upside" and state_current == "cloud":
-                state_now = "Crossunder In"
-            elif state_before == "downside" and state_current == "cloud":
-                state_now = "Crossover In"
 
             boolean_list = [long_5m, short_5m, cloud_5m]
 
@@ -245,108 +225,8 @@ try:
                                   supertrend_line_1_5m, supertrend_line_2_5m]
                     price_list.sort()
 
-                    report_message += f"\n{ticker_order}. {target_coin_ticker} : {state_now}\n"
+                    report_message += f"\n{ticker_order}. {target_coin_ticker} : {state}\n"
                     report_message += f"| {price_list[0]} / {price_list[1]} / {price_list[2]}\n"
-
-# ----------------------- enter position -----------------------
-
-                    # 5m
-                    if long_5m:
-                        line_alert.send_message(
-                            f"\n※ {target_coin_ticker} | Long position")
-
-                        # continue
-
-                        time.sleep(0.1)
-
-                        try:
-                            params = {
-                                'positionSide': 'LONG'
-                            }
-                            long_order = binance.create_market_buy_order(
-                                target_coin_ticker, buy_amount, params)
-                        except Exception as e:
-                            line_alert.send_message(e)
-                            continue
-
-                        time.sleep(0.1)
-
-                        ticker_data = [target_coin_ticker, "5m", "long",
-                                       buy_amount, coin_price]
-
-                        positioned_list.append(ticker_data)
-
-                        with open(positioned_file_path, 'w') as outfile:
-                            json.dump(positioned_list, outfile)
-
-                    elif short_5m:
-                        line_alert.send_message(
-                            f"\n※ {target_coin_ticker} | Short position")
-
-                        # continue
-
-                        time.sleep(0.1)
-
-                        try:
-                            params = {
-                                'positionSide': 'SHORT'
-                            }
-                            short_order = binance.create_market_sell_order(
-                                target_coin_ticker, buy_amount, params)
-                        except Exception as e:
-                            line_alert.send_message(e)
-                            continue
-
-                        time.sleep(0.1)
-
-                        ticker_data = [target_coin_ticker, "5m", "short",
-                                       buy_amount, coin_price]
-
-                        positioned_list.append(ticker_data)
-
-                        with open(positioned_file_path, 'w') as outfile:
-                            json.dump(positioned_list, outfile)
-
-                    # # 4h
-                    # if long_4h:
-                    #     line_alert.send_message(
-                    #         f"{target_coin_ticker} 4h long position chance")
-
-                    #     params = {
-                    #         'positionSide': 'LONG'
-                    #     }
-                    #     long_order = binance.create_market_buy_order(
-                    #         target_coin_ticker, buy_amount, params)
-
-                    #     time.sleep(0.1)
-
-                    #     ticker_data = (target_coin_ticker, "4h", "long",
-                    #                    buy_amount, coin_price)
-
-                    #     positioned_list.append(ticker_data)
-
-                    #     with open(positioned_file_path, 'w') as outfile:
-                    #         json.dump(positioned_list, outfile)
-
-                    # elif short_4h:
-                    #     line_alert.send_message(
-                    #         f"{target_coin_ticker} 4h short position chance")
-
-                    #     params = {
-                    #         'positionSide': 'SHORT'
-                    #     }
-                    #     short_order = binance.create_market_sell_order(
-                    #         target_coin_ticker, buy_amount, params)
-
-                    #     time.sleep(0.1)
-
-                    #     ticker_data = (target_coin_ticker, "4h", "short",
-                    #                    buy_amount, coin_price)
-
-                    #     positioned_list.append(ticker_data)
-
-                    #     with open(positioned_file_path, 'w') as outfile:
-                    #         json.dump(positioned_list, outfile)
 
 # -----------------------------------------------------------------
                     ticker_name = ""
@@ -432,6 +312,116 @@ try:
 
                         #     with open(positioned_file_path, 'w') as outfile:
                         #         json.dump(positioned_list, outfile)
+
+# -----------------------------------------------------------------
+
+#
+#
+#
+
+# ----------------------- enter position -----------------------
+
+                    # 5m
+                    if long_5m:
+                        time.sleep(0.3)
+
+                        line_alert.send_message(
+                            f"\n※ {target_coin_ticker} | Long position")
+
+                        continue
+
+                        time.sleep(0.1)
+
+                        try:
+                            params = {
+                                'positionSide': 'LONG'
+                            }
+                            long_order = binance.create_market_buy_order(
+                                target_coin_ticker, buy_amount, params)
+                        except Exception as e:
+                            line_alert.send_message(e)
+                            continue
+
+                        time.sleep(0.1)
+
+                        ticker_data = [target_coin_ticker, "5m", "long",
+                                       buy_amount, coin_price]
+
+                        positioned_list.append(ticker_data)
+
+                        with open(positioned_file_path, 'w') as outfile:
+                            json.dump(positioned_list, outfile)
+
+                    elif short_5m:
+                        time.sleep(0.3)
+
+                        line_alert.send_message(
+                            f"\n※ {target_coin_ticker} | Short position")
+
+                        continue
+
+                        time.sleep(0.1)
+
+                        try:
+                            params = {
+                                'positionSide': 'SHORT'
+                            }
+                            short_order = binance.create_market_sell_order(
+                                target_coin_ticker, buy_amount, params)
+                        except Exception as e:
+                            line_alert.send_message(e)
+                            continue
+
+                        time.sleep(0.1)
+
+                        ticker_data = [target_coin_ticker, "5m", "short",
+                                       buy_amount, coin_price]
+
+                        positioned_list.append(ticker_data)
+
+                        with open(positioned_file_path, 'w') as outfile:
+                            json.dump(positioned_list, outfile)
+
+                    # # 4h
+                    # if long_4h:
+                    #     line_alert.send_message(
+                    #         f"{target_coin_ticker} 4h long position chance")
+
+                    #     params = {
+                    #         'positionSide': 'LONG'
+                    #     }
+                    #     long_order = binance.create_market_buy_order(
+                    #         target_coin_ticker, buy_amount, params)
+
+                    #     time.sleep(0.1)
+
+                    #     ticker_data = (target_coin_ticker, "4h", "long",
+                    #                    buy_amount, coin_price)
+
+                    #     positioned_list.append(ticker_data)
+
+                    #     with open(positioned_file_path, 'w') as outfile:
+                    #         json.dump(positioned_list, outfile)
+
+                    # elif short_4h:
+                    #     line_alert.send_message(
+                    #         f"{target_coin_ticker} 4h short position chance")
+
+                    #     params = {
+                    #         'positionSide': 'SHORT'
+                    #     }
+                    #     short_order = binance.create_market_sell_order(
+                    #         target_coin_ticker, buy_amount, params)
+
+                    #     time.sleep(0.1)
+
+                    #     ticker_data = (target_coin_ticker, "4h", "short",
+                    #                    buy_amount, coin_price)
+
+                    #     positioned_list.append(ticker_data)
+
+                    #     with open(positioned_file_path, 'w') as outfile:
+                    #         json.dump(positioned_list, outfile)
 
             print("┕-------------------------------------------\n")
 
