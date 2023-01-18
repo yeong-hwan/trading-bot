@@ -229,17 +229,17 @@ def get_min_amount(binance, ticker):
     # order cost = price * amount
     min_order_cost = min_price * min_amount
 
-    num_min_amount = 1
+    multiple_cnt = 1
 
     if min_cost is not None and min_order_cost < min_cost:
-        # if order cost is smaller than min cost
-        # increase the order cost bigger than min cost
-        # by the multiple number of minimum amount
+        # if min_order_cost is smaller than min cost
+        # increase the min_order_cost bigger than min cost
+        # by the multiple multiple_cnt of minimum amount
         while min_order_cost < min_cost:
-            num_min_amount += 1
-            min_order_cost = min_price * (num_min_amount * min_amount)
+            multiple_cnt += 1
+            min_order_cost = min_price * (multiple_cnt * min_amount)
 
-    minimum_amount = num_min_amount * min_amount
-    return (min_cost, minimum_amount)
+    minimum_amount = multiple_cnt * min_amount
+    return (min_order_cost, minimum_amount)
 
 # ------------------------------------------------------------------------
