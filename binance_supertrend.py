@@ -328,7 +328,7 @@ try:
                         line_alert.send_message(
                             f"\n※ {target_coin_ticker} | Long position")
 
-                        continue
+                        # continue
 
                         time.sleep(0.1)
 
@@ -358,7 +358,7 @@ try:
                         line_alert.send_message(
                             f"\n※ {target_coin_ticker} | Short position")
 
-                        continue
+                        # continue
 
                         time.sleep(0.1)
 
