@@ -130,13 +130,13 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
             high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
         supertrend_line_2 = supertrend_2.iloc[-i][0]
 
-        state_at_i = get_side(candle_close_series[-i],
+        side_at_i = get_side(candle_close_series[-i],
                               supertrend_line_1, supertrend_line_2)
 
         if i == 2:
-            sell_state_current = state_at_i
+            sell_state_current = side_at_i
         elif i == 3:
-            sell_state_before = state_at_i
+            sell_state_before = side_at_i
 
     # buy_state
     buy_state_current, buy_state_before = "", ""  # -3, -4
@@ -150,13 +150,13 @@ def get_supertrend_cloud(candle, candle_type, btc=False):
             high=candle['high'], low=candle['low'], close=candle['close'], period=period_2, multiplier=multi_2)
         supertrend_line_2 = supertrend_2.iloc[-i][0]
 
-        state_at_i = get_side(candle_close_series[-i],
+        side_at_i = get_side(candle_close_series[-i],
                               supertrend_line_1, supertrend_line_2)
 
         if i == 3:
-            buy_state_current = state_at_i
+            buy_state_current = side_at_i
         elif i == 4:
-            buy_state_before = state_at_i
+            buy_state_before = side_at_i
 
     sell_state = get_state(sell_state_before, sell_state_current)
     buy_state = get_state(buy_state_before, buy_state_current)
