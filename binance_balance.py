@@ -73,7 +73,11 @@ print("┕--------------------------------------------\n")
 print("[ Top Coin List ]")
 print("|", "\n| ".join(bf.get_top_coin_list(binance, 10)), "\n")
 
-print("[ Positioned List ]")
+btc_candle_5m = bf.get_ohlcv(binance, "BTC/USDT", '5m')
+time.sleep(0.02)
+btc_data = bf.get_supertrend_cloud(btc_candle_5m, '5m')
+
+print(f"[ Positioned List | {btc_data[-1]} ]")
 idx = 1
 for position_data in positioned_list:
     ticker_name, position_side = position_data[0], position_data[2]
