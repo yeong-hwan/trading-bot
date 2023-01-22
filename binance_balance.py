@@ -27,6 +27,25 @@ binance = ccxt.binance(config={
 
 balance = binance.fetch_balance(params={"type": "future"})
 tickers = binance.fetch_tickers()
+
+# ----------------- json control ---------------------
+positioned_list = list()
+
+# server
+# positioned_file_path = "/var/trading-bot/positioned_list.json"
+
+# local
+positioned_file_path = "positioned_list.json"
+
+# ----------------------------------------------------
+try:
+    with open(positioned_file_path, 'r') as json_file:
+        positioned_list = json.load(json_file)
+
+except Exception as e:
+    # line_alert.send_message("| Exception by First | Not Positioned")
+    print("\n| Exception by First | Not Positioned\n")
+
 # ---------------------------------------------------
 
 time.sleep(0.1)
@@ -53,3 +72,15 @@ print("┕--------------------------------------------\n")
 
 print("[ Top Coin List ]")
 print("|", "\n| ".join(bf.get_top_coin_list(binance, 10)), "\n")
+
+print("[ Positioned List ]")
+idx = 1
+for position_data in positioned_list:
+    ticker_name, position_side = position_data[0], position_data[2]
+    if position_side == "long":
+        position_side = "L"
+    else:
+        position_side = "S"
+    print(f"{idx}. [{position_side}] | {ticker_name[:-5]}")
+    idx += 1
+print("")
